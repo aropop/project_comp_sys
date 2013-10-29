@@ -3,3 +3,11 @@ al bevat kleur
 se is de screenbuffer
 di is meestal de plaats waarop getekend word
 
+vliegtuigje staat 10 van de rand
+
+
+nmake cv -> doet de debugger runnen
+
+ret 6 -> betekent 3 parameters van 2 bytes
+
+al op 10 zetten is een groene kleur

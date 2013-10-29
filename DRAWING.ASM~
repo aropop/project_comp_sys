@@ -166,9 +166,11 @@ renderWorld PROC NEAR
 	;and		ax, 07fh
 	;push	ax
 	
-	mov	ax, 10
+	mov 	ax, 20 ;positie y
 	push 	ax
-	mov	ax, 20
+	mov	ax, 10 ;breedte
+	push 	ax
+	mov	ax, 20 ;hoogte
 	push 	ax
 	
 	call 	drawTriangle
@@ -311,6 +313,7 @@ drawRect ENDP
 
 
 ;Draws a triangle
+;W,H and position y is passed on stack
 
 drawTriangle PROC NEAR
 	push	bp
@@ -328,13 +331,25 @@ drawTriangle PROC NEAR
 	mov	ax, seg screenBuffer
 	mov	es, ax
 
-	mov di, 000h
+	
+	;positie X
+	mov di, 780 ;di contains position
+	;neg di
+	
+	;positie Y
+	mov 	ax, [bp + 4][4]
+	mov 	dx, SCREENW
+	mul	dx
+	add	di, ax
+
+	;set al to color
+	mov 	al, 10
 
 	; Draw slope to right
-	mov		cx, [bp + 4][2]	; triangle W
+	mov	cx, [bp + 4][2]	; triangle W
 	dec	di
 @@:
-	mov	es:[di], al	; set pixel
+	mov	es:[di], al	; set pixel, se is een screenbuffer array, op plek di zet je de kleur al
 	add	di, SCREENW	; jump to next pixel (on next line)
 	add 	di, 1
 	loop	@B ;loopt tot cx null is
@@ -367,7 +382,7 @@ drawTriangle PROC NEAR
 	pop	ax
 	; return
 	pop	bp
-	ret	4
+	ret	6
 
 	
 
