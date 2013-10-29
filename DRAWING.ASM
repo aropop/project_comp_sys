@@ -391,9 +391,9 @@ drawTriangle ENDP
 
 goUp PROC NEAR
 	push 	bx ;saven om zelfde staat te garanderen
-	mov 	bx, 780
+	mov 	bx, 1
 	cmp	bx, [position]
-	jbe	@f
+	jae	@f
 	
 	mov 	bx, 2
 	neg 	bx
@@ -412,6 +412,7 @@ goDown PROC NEAR
 	neg bx
 	mov ax, SCREENH
 	add ax, bx
+	dec ax ; fout marge
 	cmp 	[position], ax
 	ja	@F
 	add	[position], 2
