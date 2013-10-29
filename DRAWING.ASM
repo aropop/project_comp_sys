@@ -23,6 +23,7 @@ SCREENH		equ 200
 oldVideoMode	db ?
 
 hardOffset	dw 0 ; test variable
+position	dw 40
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
 .FARDATA?	; segment that contains the screenBuffer for mode 13h drawing
@@ -55,15 +56,18 @@ main PROC NEAR
 	push	ax
 	call	setVideoMode
 	mov		[oldVideoMode], al
-	
+	;initialiseer de positie van het mannetje	
+	mov	[position], 40 ;ax bevat de y coordinaat van de 
+
 @main_loop:	
 	;call	updateWorld	; this would contain the game code (like AI)
 
-	mov	ax, 40 ;ax bevat de y coordinaat van de 
-	push 	ax
+
 	call	renderWorld	; draws the world
-	
+
 	call	handleInput	; handle user input
+
+
 	cmp		al, 0
 	jz		@main_loop
 	
@@ -171,7 +175,7 @@ renderWorld PROC NEAR
 	;and		ax, 07fh
 	;push	ax
 	
-	mov 	ax, [bp + 4][0] ;positie y
+	mov 	ax, [position] ;positie y
 	push 	ax
 	mov	ax, 10 ;breedte
 	push 	ax
@@ -204,7 +208,11 @@ handleInput PROC NEAR
 	mov	al, es:[__keyboardState][SCANCODE_UP]	; test UP key
 	cmp	al, 0
 	jz @F	; jump next
-	; call some function to handle this key
+
+
+	call	goUp
+
+
 	mov	ax, SCREENW
 	sub [hardOffset], ax
 	sub [hardOffset], ax
@@ -212,7 +220,11 @@ handleInput PROC NEAR
 	mov	al, es:[__keyboardState][SCANCODE_DOWN]	; test DOWN key
 	cmp	al, 0
 	jz @F	; jump next
-	; call some function to handle this key
+	
+
+	call	goDown
+
+	
 	mov	ax, SCREENW
 	add [hardOffset], ax
 	add [hardOffset], ax
@@ -236,6 +248,7 @@ handleInput PROC NEAR
 	mov	al, es:[__keyboardState][SCANCODE_ESC]	; test ESC
 
 @done:
+	
 	pop	es
 	ret 0
 handleInput ENDP
@@ -393,6 +406,29 @@ drawTriangle PROC NEAR
 	
 
 drawTriangle ENDP
+
+goUp PROC NEAR
+
+	cmp	[position], SCREENH
+	ja	@F
+	
+	push 	bx ;saven om zelfde staat te garanderen
+	mov 	bx, 2
+	neg 	bx
+	add 	[position], bx ;-2 optellen
+	pop 	bx ; herstellen
+@@:
+	ret 0
+goUp ENDP
+
+goDown PROC NEAR 
+
+	cmp 	[position], 0
+	jb	@F
+	add	[position], 2
+@@:
+	ret 0
+goDown ENDP
 
 ; _------------------------------- END OF CODE ---------------------------------
 END main
