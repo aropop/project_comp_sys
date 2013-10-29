@@ -59,7 +59,7 @@ main PROC NEAR
 @main_loop:	
 	;call	updateWorld	; this would contain the game code (like AI)
 
-	mov	ax, 40
+	mov	ax, 40 ;ax bevat de y coordinaat van de 
 	push 	ax
 	call	renderWorld	; draws the world
 	

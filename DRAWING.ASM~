@@ -59,6 +59,8 @@ main PROC NEAR
 @main_loop:	
 	;call	updateWorld	; this would contain the game code (like AI)
 
+	mov	ax, 40
+	push 	ax
 	call	renderWorld	; draws the world
 	
 	call	handleInput	; handle user input
