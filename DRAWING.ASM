@@ -17,6 +17,7 @@ include KEYB.INC
 ; Other constants	
 SCREENW		equ 320
 SCREENH		equ 200
+PLAYERH		equ 20
 
 ; --- DATA SEGMENT -------------------------------------------------------------
 .DATA        ; data segment, variables
@@ -161,9 +162,6 @@ updateScreen ENDP
 
 ;Takes y coordinate of our plane
 renderWorld PROC NEAR
-	push 	bp
-	mov	bp, sp
-	push	ax
 	
 	call	clearScreenBuffer
 
@@ -179,7 +177,7 @@ renderWorld PROC NEAR
 	push 	ax
 	mov	ax, 10 ;breedte
 	push 	ax
-	mov	ax, 20 ;hoogte
+	mov	ax, PLAYERH ;hoogte
 	push 	ax
 	
 	call 	drawTriangle
@@ -187,9 +185,7 @@ renderWorld PROC NEAR
 	; draw the screen buffer
 	call 	updateScreen
 	
-	pop	ax
-	pop	bp
-	ret	2
+	ret	0
 renderWorld ENDP
 
 ; Reads keyboard buffer and acts (returns non-zero if loop should end, 0 otherwise)
@@ -208,40 +204,26 @@ handleInput PROC NEAR
 	mov	al, es:[__keyboardState][SCANCODE_UP]	; test UP key
 	cmp	al, 0
 	jz @F	; jump next
-
-
 	call	goUp
 
-
-	mov	ax, SCREENW
-	sub [hardOffset], ax
-	sub [hardOffset], ax
 @@:
 	mov	al, es:[__keyboardState][SCANCODE_DOWN]	; test DOWN key
 	cmp	al, 0
 	jz @F	; jump next
-	
+	call	goDown	
 
-	call	goDown
-
-	
-	mov	ax, SCREENW
-	add [hardOffset], ax
-	add [hardOffset], ax
 @@:
 	mov	al, es:[__keyboardState][SCANCODE_LEFT]	; test LEFT key
 	cmp	al, 0
 	jz @F	; jump next
 	; call some function to handle this key
-	dec [hardOffset]
-	dec [hardOffset]
+
 @@:
 	mov	al, es:[__keyboardState][SCANCODE_RIGHT]	; test RIGHT key
 	cmp	al, 0
 	jz @F	; jump next
 	; call some function to handle this key
-	inc [hardOffset]
-	inc [hardOffset]
+	; shoot function moet hier komen
 @@:
 	
 	; finally, let's put the ESC key status as return value in AX
@@ -408,25 +390,34 @@ drawTriangle PROC NEAR
 drawTriangle ENDP
 
 goUp PROC NEAR
-
-	cmp	[position], SCREENH
-	ja	@F
-	
 	push 	bx ;saven om zelfde staat te garanderen
+	mov 	bx, 780
+	cmp	bx, [position]
+	jbe	@f
+	
 	mov 	bx, 2
 	neg 	bx
 	add 	[position], bx ;-2 optellen
-	pop 	bx ; herstellen
 @@:
+	pop 	bx ; herstellen
 	ret 0
 goUp ENDP
 
 goDown PROC NEAR 
-
-	cmp 	[position], 0
-	jb	@F
+	
+	push ax
+	push bx
+	;screenh - playerh is de ondergrens
+	mov bx, PLAYERH
+	neg bx
+	mov ax, SCREENH
+	add ax, bx
+	cmp 	[position], ax
+	ja	@F
 	add	[position], 2
 @@:
+	pop bx
+	pop ax
 	ret 0
 goDown ENDP
 
