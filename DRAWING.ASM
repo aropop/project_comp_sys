@@ -59,6 +59,8 @@ main PROC NEAR
 @main_loop:	
 	;call	updateWorld	; this would contain the game code (like AI)
 
+	mov	ax, 40
+	push 	ax
 	call	renderWorld	; draws the world
 	
 	call	handleInput	; handle user input
@@ -153,7 +155,10 @@ updateScreen PROC NEAR
 	ret		0
 updateScreen ENDP
 
+;Takes y coordinate of our plane
 renderWorld PROC NEAR
+	push 	bp
+	mov	bp, sp
 	push	ax
 	
 	call	clearScreenBuffer
@@ -166,7 +171,7 @@ renderWorld PROC NEAR
 	;and		ax, 07fh
 	;push	ax
 	
-	mov 	ax, 40 ;positie y
+	mov 	ax, [bp + 4][0] ;positie y
 	push 	ax
 	mov	ax, 10 ;breedte
 	push 	ax
@@ -179,7 +184,8 @@ renderWorld PROC NEAR
 	call 	updateScreen
 	
 	pop	ax
-	ret	0
+	pop	bp
+	ret	2
 renderWorld ENDP
 
 ; Reads keyboard buffer and acts (returns non-zero if loop should end, 0 otherwise)
