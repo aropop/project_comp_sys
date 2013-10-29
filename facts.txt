@@ -1,0 +1,5 @@
+770 is position (0,0)
+al bevat kleur
+se is de screenbuffer
+di is meestal de plaats waarop getekend word
+
