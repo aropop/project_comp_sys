@@ -37,6 +37,7 @@ oldVideoMode	db ?
 
 hardOffset	dw 0 ; test variable
 position	dw 40
+positionBeam	dw 0
 obstacles	dw 767,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
@@ -197,6 +198,8 @@ renderWorld PROC NEAR
 
 	call	drawObstacles
 
+	call 	drawBeam
+
 	; draw the screen buffer
 	call 	updateScreen
 	
@@ -238,7 +241,7 @@ handleInput PROC NEAR
 	cmp	al, 0
 	jz @F	; jump next
 	; call some function to handle this key
-	; shoot function moet hier komen
+	call	createBeam
 @@:
 	
 	; finally, let's put the ESC key status as return value in AX
@@ -551,6 +554,65 @@ done:
 	pop bx
 	ret 0
 createObstacle ENDP
+
+
+createBeam PROC NEAR
+
+	push ax
+	push dx
+	push di
+
+;calculate posX
+
+	mov dx, PLAYERX
+	mov di, PLAYERW
+	add di, dx
+
+;calculate posY
+
+	mov 	dx, PLAYERH
+	SHR 	dx, 1
+	mov 	ax, SCREENW
+	mul 	dx ;in ax en dx player hoogte naar beneden
+	add	di, ax ;di is juist op positie na
+	mov 	dx, [position]
+	mov	ax, SCREENW
+	mul	dx 
+	add	di, ax
+	mov 	[positionBeam], di
+
+;position saved => DONE
+
+	pop di
+	pop dx
+	pop ax
+	ret 0
+
+createBeam ENDP
+
+drawBeam PROC NEAR
+	
+	push 	di
+	push 	cx
+	push 	ax
+
+	mov	ax, seg screenBuffer
+	mov 	es, ax
+	
+	mov	di, [positionBeam]
+	mov 	al, PLAYERCOLOR
+	mov 	cx, 4 
+@@:	
+	mov 	es:[di], al
+	inc 	di
+	loop 	@B
+
+	pop 	ax
+	pop	cx
+	pop	di
+	ret 	0
+	
+drawBeam ENDP
 
 
 
