@@ -18,6 +18,10 @@ include KEYB.INC
 SCREENW		equ 320
 SCREENH		equ 200
 PLAYERH		equ 20
+OBSTACLEW	equ 5
+
+PLAYERCOLOR 	equ 10
+OBSTACLECOLOR	equ 60
 
 ; --- DATA SEGMENT -------------------------------------------------------------
 .DATA        ; data segment, variables
@@ -25,6 +29,7 @@ oldVideoMode	db ?
 
 hardOffset	dw 0 ; test variable
 position	dw 40
+obstacles	dw 20,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
 .FARDATA?	; segment that contains the screenBuffer for mode 13h drawing
@@ -182,6 +187,8 @@ renderWorld PROC NEAR
 	
 	call 	drawTriangle
 
+	call	drawObstacles
+
 	; draw the screen buffer
 	call 	updateScreen
 	
@@ -280,7 +287,7 @@ drawRect PROC NEAR
 	rep	stosb	; draw	
 	
 	; Draw right vertical line	
-	mov		cx, [bp + 4][0]	; rect H
+	mov	cx, [bp + 4][0]	; rect H
 	dec	di
 @@:
 	mov	es:[di], al	; set pixel
@@ -344,7 +351,7 @@ drawTriangle PROC NEAR
 	add	di, ax
 
 	;set al to color
-	mov 	al, 10
+	mov 	al, PLAYERCOLOR
 
 	; Draw slope to right
 	mov	cx, [bp + 4][2]	; triangle W
@@ -389,6 +396,88 @@ drawTriangle PROC NEAR
 
 drawTriangle ENDP
 
+drawObstacles PROC NEAR
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	di
+	push	es	
+
+
+	; set segment
+	mov	ax, seg screenBuffer
+	mov	es, ax
+
+	mov 	bx, 0 ;bx is obstacle counter
+	mov	ax, 0
+	mov	di, 0
+	mov	ax, [obstacles][bx]
+
+	cmp	ax, 0
+	je	enddrawobstacles
+
+nextobstacle:
+	;pos x
+	mov 	di, [obstacles][bx]
+	;pos y
+	inc 	bx
+	mov 	dx, [obstacles][bx]
+	mul	dx
+	add	di, ax
+
+	mov	ax, 0
+	mov 	al, OBSTACLECOLOR
+	;omlaag
+	mov	cx, OBSTACLEW
+@@:	
+	mov es:[di], al
+	sub	di, SCREENW
+	loop @B
+
+	;rechts
+	mov cx, OBSTACLEW
+	
+@@:
+	mov es:[di], al
+	inc	di
+	loop @B
+
+	;omhoog
+	mov cx, OBSTACLEW
+@@:
+	mov es:[di], al
+	add di, SCREENW
+	loop @B
+
+	;links
+	mov cx, OBSTACLEW
+@@:
+	mov es:[di], al
+	dec di
+	loop @B
+	
+
+	;inc bx en check if last
+	inc 	bx
+	mov 	ax, [obstacles][bx]
+	cmp 	ax, 0
+	jne	nextobstacle
+
+
+enddrawobstacles:	
+
+
+	pop	es
+	pop	di
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	
+	ret 0
+drawObstacles ENDP
+
 goUp PROC NEAR
 	push 	bx ;saven om zelfde staat te garanderen
 	mov 	bx, 1
@@ -421,6 +510,8 @@ goDown PROC NEAR
 	pop ax
 	ret 0
 goDown ENDP
+
+
 
 ; _------------------------------- END OF CODE ---------------------------------
 END main
