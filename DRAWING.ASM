@@ -18,7 +18,13 @@ include KEYB.INC
 SCREENW		equ 320
 SCREENH		equ 200
 PLAYERH		equ 20
+PLAYERW		equ 10
+PLAYERSTARTY	equ 90
+PLAYERX		equ 780
 OBSTACLEW	equ 5
+
+OBSTACLESPAWNX 	equ 767
+
 
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
@@ -29,7 +35,7 @@ oldVideoMode	db ?
 
 hardOffset	dw 0 ; test variable
 position	dw 40
-obstacles	dw 765,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
+obstacles	dw 767,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
 .FARDATA?	; segment that contains the screenBuffer for mode 13h drawing
@@ -63,7 +69,7 @@ main PROC NEAR
 	call	setVideoMode
 	mov		[oldVideoMode], al
 	;initialiseer de positie van het mannetje	
-	mov	[position], 40 ;ax bevat de y coordinaat van de 
+	mov	[position], PLAYERSTARTY ;ax bevat de y coordinaat van de 
 
 @main_loop:	
 	;call	updateWorld	; this would contain the game code (like AI)
@@ -180,7 +186,7 @@ renderWorld PROC NEAR
 	
 	mov 	ax, [position] ;positie y
 	push 	ax
-	mov	ax, 10 ;breedte
+	mov	ax, PLAYERW ;breedte
 	push 	ax
 	mov	ax, PLAYERH ;hoogte
 	push 	ax
@@ -341,7 +347,7 @@ drawTriangle PROC NEAR
 
 	
 	;positie X
-	mov di, 780 ;di contains position
+	mov di, PLAYERX ;di contains position
 	;neg di
 	
 	;positie Y
