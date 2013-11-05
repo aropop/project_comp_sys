@@ -29,7 +29,7 @@ oldVideoMode	db ?
 
 hardOffset	dw 0 ; test variable
 position	dw 40
-obstacles	dw 20,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
+obstacles	dw 10,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
 .FARDATA?	; segment that contains the screenBuffer for mode 13h drawing
@@ -412,17 +412,17 @@ drawObstacles PROC NEAR
 	mov 	bx, 0 ;bx is obstacle counter
 	mov	ax, 0
 	mov	di, 0
-	mov	ax, [obstacles][bx]
+	mov	ax, obstacles[bx]
 
 	cmp	ax, 0
 	je	enddrawobstacles
 
 nextobstacle:
 	;pos x
-	mov 	di, [obstacles][bx]
+	mov 	di, obstacles[bx]
 	;pos y
 	inc 	bx
-	mov 	dx, [obstacles][bx]
+	mov 	dx, SCREENW
 	mul	dx
 	add	di, ax
 
@@ -460,7 +460,8 @@ nextobstacle:
 
 	;inc bx en check if last
 	inc 	bx
-	mov 	ax, [obstacles][bx]
+	mov	di, 0
+	mov 	ax, obstacles[bx]
 	cmp 	ax, 0
 	jne	nextobstacle
 
