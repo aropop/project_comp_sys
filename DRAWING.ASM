@@ -21,6 +21,8 @@ PLAYERH		equ 20
 PLAYERW		equ 10
 PLAYERSTARTY	equ 90
 PLAYERX		equ 780
+
+MAXOBSTACLES 	equ 5
 OBSTACLEW	equ 5
 
 OBSTACLESPAWNX 	equ 767
@@ -518,6 +520,37 @@ goDown PROC NEAR
 	pop ax
 	ret 0
 goDown ENDP
+
+createObstacle PROC NEAR
+	push bx
+	push ax
+
+	mov bx, 0
+loopToEnd:
+	mov ax, obstacles[bx]
+	cmp ax, 0
+	je rightindex
+	
+	mov ax, MAXOBSTACLES
+	shl ax, 1
+	cmp bx, ax
+	jge done ;no more place for new obstacles
+	add bx, 2
+	jmp loopToEnd
+
+
+rightindex:
+	call rand
+	and ax, 00CFh
+	mov obstacles[bx], OBSTACLESPAWNX
+	add bx, 2
+	mov obstacles[bx], ax	
+
+done:
+	pop ax
+	pop bx
+	ret 0
+createObstacle ENDP
 
 
 
