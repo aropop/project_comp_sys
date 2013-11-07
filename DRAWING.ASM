@@ -562,6 +562,30 @@ enddrawobstacles:
 	ret 0
 drawObstacles ENDP
 
+drawBeam PROC NEAR
+	
+	push 	di
+	push 	cx
+	push 	ax
+
+	mov	ax, seg screenBuffer
+	mov 	es, ax
+	
+	mov	di, [positionBeam]
+	mov 	al, PLAYERCOLOR
+	mov 	cx, 4 
+@@:	
+	mov 	es:[di], al
+	inc 	di
+	loop 	@B
+
+	pop 	ax
+	pop	cx
+	pop	di
+	ret 	0
+	
+drawBeam ENDP
+
 goUp PROC NEAR
 	push 	bx ;saven om zelfde staat te garanderen
 	mov 	bx, 1
@@ -661,29 +685,6 @@ createBeam PROC NEAR
 
 createBeam ENDP
 
-drawBeam PROC NEAR
-	
-	push 	di
-	push 	cx
-	push 	ax
-
-	mov	ax, seg screenBuffer
-	mov 	es, ax
-	
-	mov	di, [positionBeam]
-	mov 	al, PLAYERCOLOR
-	mov 	cx, 4 
-@@:	
-	mov 	es:[di], al
-	inc 	di
-	loop 	@B
-
-	pop 	ax
-	pop	cx
-	pop	di
-	ret 	0
-	
-drawBeam ENDP
 
 
 
