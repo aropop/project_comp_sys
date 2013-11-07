@@ -39,6 +39,7 @@ hardOffset	dw 0 ; test variable
 position	dw 40
 positionBeam	dw 0
 obstacles	dw 767,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
+levelspeed	dw 1 ;snelheid waarmee de obstacles bewegen
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
 .FARDATA?	; segment that contains the screenBuffer for mode 13h drawing
@@ -75,7 +76,7 @@ main PROC NEAR
 	mov	[position], PLAYERSTARTY ;ax bevat de y coordinaat van de 
 
 @main_loop:	
-	;call	updateWorld	; this would contain the game code (like AI)
+	call	updateWorld	; this would contain the game code (like AI)
 
 
 	call	renderWorld	; draws the world
@@ -205,6 +206,45 @@ renderWorld PROC NEAR
 	
 	ret	0
 renderWorld ENDP
+
+updateWorld PROC NEAR
+
+	call updateObstacles
+
+	ret 0
+updateWorld ENDP
+
+updateObstacles PROC NEAR
+	
+	push ax
+	push dx
+	push bx
+
+	mov bx, 0 ;bx obstacle counter
+
+compareLoop:
+	mov ax, obstacles[bx] ;x coordinaat
+	
+	cmp ax, 0
+	je endUpdateObstacles
+	mov dx, [levelspeed]
+	sub ax, dx
+	mov obstacles[bx], ax
+	add bx, 4 ;2 om x positie te springen 2 om y positie
+	jmp compareLoop
+
+
+
+endUpdateObstacles:
+
+	pop bx
+	pop dx
+	pop ax
+	
+
+
+	ret 0
+updateObstacles ENDP
 
 ; Reads keyboard buffer and acts (returns non-zero if loop should end, 0 otherwise)
 handleInput PROC NEAR
