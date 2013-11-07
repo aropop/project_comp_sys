@@ -229,9 +229,40 @@ compareLoop:
 	je endUpdateObstacles
 	mov dx, [levelspeed]
 	sub ax, dx
+	push ax ;vernieuwde waarden pushen
+	sub ax, OBSTACLESPAWNX
+	add ax, SCREENW
+	;kijken of dit nog op het scherm is
+	cmp ax, 0
+	pop ax ;voor de volledigheid
+	jle deleteAndSwap
 	mov obstacles[bx], ax
 	add bx, 4 ;2 om x positie te springen 2 om y positie
 	jmp compareLoop
+
+deleteAndSwap:
+	;oude index pushen
+	push bx
+	;loopen tot het einde
+@@:
+	add bx, 4
+	mov ax, obstacles[bx]
+	cmp ax, 0
+	je @B
+	;terug op de vorige bestaande zetten
+	sub bx, 4
+	mov ax, obstacles[bx]
+	add bx, 2 ;y coordinaat
+	mov dx, obstacles[bx]
+	pop bx
+	mov obstacles[bx], ax
+	add bx, 2
+	mov obstacles[bx], dx
+	sub bx, 2 ;vanaf hier moet er nog verplaatst worden
+	jmp compareLoop
+	
+	
+	
 
 
 
