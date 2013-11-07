@@ -30,6 +30,9 @@ OBSTACLESPAWNX 	equ 767
 
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
+ENDCOLOR	equ 30
+
+AMOUNTPIXELS	equ 64000
 
 ; --- DATA SEGMENT -------------------------------------------------------------
 .DATA        ; data segment, variables
@@ -40,6 +43,9 @@ position	dw 40
 positionBeam	dw 0
 obstacles	dw 767,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 levelspeed	dw 1 ;snelheid waarmee de obstacles bewegen
+dead		db 1 ;bepaald of je dood bent
+endcounter	db 0
+
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
 .FARDATA?	; segment that contains the screenBuffer for mode 13h drawing
@@ -76,9 +82,15 @@ main PROC NEAR
 	mov	[position], PLAYERSTARTY ;ax bevat de y coordinaat van de 
 
 @main_loop:	
+
+	push ax ;preserve
+	xor ax, ax
+	mov ah, [dead]
+	cmp ax, 0
+	pop ax ;restore
+	jne donotupdate
 	call	updateWorld	; this would contain the game code (like AI)
-
-
+donotupdate:
 	call	renderWorld	; draws the world
 
 	call	handleInput	; handle user input
@@ -187,7 +199,11 @@ renderWorld PROC NEAR
 	;call	rand
 	;and		ax, 07fh
 	;push	ax
-	
+	xor 	ax, ax
+	mov 	al, [endcounter]
+	cmp 	ax, 0
+	jne	drawEndLabel	
+
 	mov 	ax, [position] ;positie y
 	push 	ax
 	mov	ax, PLAYERW ;breedte
@@ -200,6 +216,15 @@ renderWorld PROC NEAR
 	call	drawObstacles
 
 	call 	drawBeam
+	
+	mov [endcounter], 0001b
+	jmp dontDrawEnd
+
+drawEndLabel:
+	call 	drawEnd
+	mov [endcounter], 0000b
+
+dontDrawEnd:
 
 	; draw the screen buffer
 	call 	updateScreen
@@ -358,7 +383,7 @@ drawRect PROC NEAR
 	mov	dx, SCREENW
 	mul	dx		; AX = posY * SCREENW
 	add	ax, bx		; AX now contains start offset of rectangle
-	add	ax, offset screenBuffer
+	add	ax, offset screenBuffer ;offset in het segment
 	add	ax, [hardOffset]
 	
 	; Draw upper horizontal line
@@ -585,6 +610,31 @@ drawBeam PROC NEAR
 	ret 	0
 	
 drawBeam ENDP
+
+drawEnd PROC NEAR
+	push es
+	push ax
+	push di
+
+	mov	ax, seg screenBuffer
+	mov 	es, ax
+	mov 	di, offset screenBuffer
+	
+loopColor:
+	cmp	di, AMOUNTPIXELS
+	jge	endLoop
+	mov	al, ENDCOLOR
+	mov	es:[di], al
+	jmp 	loopColor
+	
+endLoop:
+
+	pop es
+	pop ax
+	pop di
+	
+	ret 0
+drawEnd ENDP
 
 goUp PROC NEAR
 	push 	bx ;saven om zelfde staat te garanderen

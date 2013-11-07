@@ -11,3 +11,5 @@ nmake cv -> doet de debugger runnen
 ret 6 -> betekent 3 parameters van 2 bytes
 
 al op 10 zetten is een groene kleur
+
+768 is het eerste punt vermits we een offset hebben van 768 vermits het palette juist zo groot is
