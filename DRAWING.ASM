@@ -30,7 +30,7 @@ OBSTACLESPAWNX 	equ 767
 
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
-ENDCOLOR	equ 30
+ENDCOLOR	equ 64
 
 AMOUNTPIXELS	equ 64000
 
@@ -43,7 +43,7 @@ position	dw 40
 positionBeam	dw 0
 obstacles	dw 767,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 levelspeed	dw 1 ;snelheid waarmee de obstacles bewegen
-dead		db 0 ;bepaald of je dood bent
+dead		db 1 ;bepaald of je dood bent
 endcounter	db 0
 
 
@@ -315,6 +315,9 @@ handleInput PROC NEAR
 	cmp	al, 0
 	jz	@done		; no key pressed
 
+	cmp	[dead], 0001b
+	je	testesc
+
 	; handle keys
 	mov	al, es:[__keyboardState][SCANCODE_UP]	; test UP key
 	cmp	al, 0
@@ -340,7 +343,7 @@ handleInput PROC NEAR
 	; call some function to handle this key
 	call	createBeam
 @@:
-	
+testesc:	
 	; finally, let's put the ESC key status as return value in AX
 	mov	al, es:[__keyboardState][SCANCODE_ESC]	; test ESC
 
@@ -616,20 +619,19 @@ drawEnd PROC NEAR
 	push es
 	push ax
 	push di
+	push cx
 
 	mov	ax, seg screenBuffer
 	mov 	es, ax
 	mov 	di, offset screenBuffer
+	xor	ax, ax
 	mov	al, ENDCOLOR
-	
-loopColor:
-	cmp	di, AMOUNTPIXELS
-	jge	endLoop
-	mov	es:[di], al
-	jmp 	loopColor
-	
-endLoop:
+	mov	ah, ENDCOLOR
+	mov	cx, 64000/2
+	rep 	stosw ;repeats cx times and stows stores in es:di the value of ax
 
+
+	pop cx
 	pop es
 	pop ax
 	pop di
