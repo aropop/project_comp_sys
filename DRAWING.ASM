@@ -19,13 +19,13 @@ SCREENW		equ 320
 SCREENH		equ 200
 PLAYERH		equ 20
 PLAYERW		equ 10
-PLAYERSTARTY	equ 90
-PLAYERX		equ 780
+PLAYERSTARTY	equ 0
+PLAYERX		equ 12
 
 MAXOBSTACLES 	equ 5
 OBSTACLEW	equ 5
 
-OBSTACLESPAWNX 	equ 767
+OBSTACLESPAWNX 	equ 319
 
 
 PLAYERCOLOR 	equ 10
@@ -39,9 +39,9 @@ AMOUNTPIXELS	equ 64000
 oldVideoMode	db ?
 
 hardOffset	dw 0 ; test variable
-position	dw 40
+position	dw 0
 positionBeam	dw 0
-obstacles	dw 767,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
+obstacles	dw 160,5,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 levelspeed	dw 1 ;snelheid waarmee de obstacles bewegen
 dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
@@ -205,13 +205,6 @@ renderWorld PROC NEAR
 	cmp 	ax, 00000000b
 	jne	drawEndLabel	
 
-	mov 	ax, [position] ;positie y
-	push 	ax
-	mov	ax, PLAYERW ;breedte
-	push 	ax
-	mov	ax, PLAYERH ;hoogte
-	push 	ax
-	
 	call 	drawTriangle
 
 	call	drawObstacles
@@ -236,6 +229,8 @@ renderWorld ENDP
 updateWorld PROC NEAR
 
 	call updateObstacles
+
+	call collisionObstaclePlayer
 
 	ret 0
 updateWorld ENDP
@@ -370,6 +365,7 @@ drawRect PROC NEAR
 	mov	ax, seg screenBuffer
 	mov	es, ax
 	
+	
 	; Calculate posX
 	mov	ax, [bp + 4][2]
 	neg	ax
@@ -435,9 +431,6 @@ drawRect ENDP
 ;W,H and position y is passed on stack
 
 drawTriangle PROC NEAR
-	push	bp
-	mov	bp, sp
-	
 	push	ax
 	push	bx
 	push	cx
@@ -449,14 +442,15 @@ drawTriangle PROC NEAR
 	; set segment
 	mov	ax, seg screenBuffer
 	mov	es, ax
+	mov	di, offset screenBuffer
 
 	
 	;positie X
-	mov di, PLAYERX ;di contains position
-	;neg di
+	add di, PLAYERX ;di contains position
+	
 	
 	;positie Y
-	mov 	ax, [bp + 4][4]
+	mov 	ax, [position]
 	mov 	dx, SCREENW
 	mul	dx
 	add	di, ax
@@ -465,7 +459,7 @@ drawTriangle PROC NEAR
 	mov 	al, PLAYERCOLOR
 
 	; Draw slope to right
-	mov	cx, [bp + 4][2]	; triangle W
+	mov	cx, PLAYERW	; triangle W
 	dec	di
 @@:
 	mov	es:[di], al	; set pixel, se is een screenbuffer array, op plek di zet je de kleur al
@@ -475,7 +469,7 @@ drawTriangle PROC NEAR
 
 
 	; Draw slope to left
-	mov	cx, [bp + 4][2] ; triangle W terug in cx stoppen	
+	mov	cx, PLAYERW ; triangle W terug in cx stoppen	
 	dec	 di
 @@:
 	mov es:[di], al
@@ -484,7 +478,7 @@ drawTriangle PROC NEAR
 	loop	@B
 
 	;Draw Vertical line
-	mov 	cx, [bp + 4][0]  ; triangle H
+	mov 	cx, PLAYERH  ; triangle H
 	sub 	di, SCREENW
 @@:
 	mov 	es:[di], al
@@ -499,9 +493,7 @@ drawTriangle PROC NEAR
 	pop	cx
 	pop	bx
 	pop	ax
-	; return
-	pop	bp
-	ret	6
+	ret	0
 
 	
 
@@ -519,10 +511,10 @@ drawObstacles PROC NEAR
 	; set segment
 	mov	ax, seg screenBuffer
 	mov	es, ax
+	mov	di, offset screenBuffer
 
 	mov 	bx, 0 ;bx is obstacle counter
 	mov	ax, 0
-	mov	di, 0
 	mov	ax, obstacles[bx]
 
 	cmp	ax, 0
@@ -530,7 +522,7 @@ drawObstacles PROC NEAR
 
 nextobstacle:
 	;pos x
-	mov 	di, obstacles[bx]
+	add 	di, obstacles[bx]
 	;pos y
 	add 	bx,2 ;Add 2 because we use words
 	mov 	ax, obstacles[bx]
@@ -738,7 +730,59 @@ createBeam PROC NEAR
 
 createBeam ENDP
 
+collisionObstaclePlayer PROC NEAR
 
+	push	bx
+	push	ax
+	push	dx
+
+	mov	bx, 0 ; obstacle counter
+	xor	ax, ax
+
+
+startCollision:
+	mov	ax, obstacles[bx]
+	cmp 	ax, 0
+	je	endCollision
+
+	cmp 	ax, PLAYERX + PLAYERW
+	jg	nextObstacleAndAdd
+
+	add	bx, 2
+	mov 	ax, obstacles[bx]
+	;y coordinaat
+
+	mov 	dx, bx
+	sub	dx, [position]
+	jns	@F
+	neg	dx
+@@:
+	cmp 	dx, PLAYERH
+	jl	deadJump
+
+	jmp	nextObstacle
+
+	
+deadJump:
+	mov	[dead], 0001b	
+	jmp 	endCollision
+
+
+nextObstacleAndAdd:
+	add	bx, 2
+nextObstacle:
+	add	bx, 2
+	jmp	startCollision
+	
+
+
+
+endCollision:
+	pop	dx	
+	pop 	ax
+	pop 	bx
+	ret 	0
+collisionObstaclePlayer ENDP
 
 
 ; _------------------------------- END OF CODE ---------------------------------
