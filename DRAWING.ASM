@@ -43,7 +43,7 @@ position	dw 40
 positionBeam	dw 0
 obstacles	dw 767,30,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 levelspeed	dw 1 ;snelheid waarmee de obstacles bewegen
-dead		db 1 ;bepaald of je dood bent
+dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
 
 
