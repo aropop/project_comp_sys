@@ -230,7 +230,6 @@ updateWorld PROC NEAR
 
 	call updateObstacles
 
-	call collisionObstaclePlayer
 
 	ret 0
 updateWorld ENDP
@@ -535,6 +534,7 @@ nextobstacle:
 	;omlaag
 	mov	cx, OBSTACLEW
 @@:	
+      call checkCollide
 	mov es:[di], al
 	sub	di, SCREENW
 	loop @B
@@ -543,6 +543,7 @@ nextobstacle:
 	mov cx, OBSTACLEW
 	
 @@:
+      call checkCollide
 	mov es:[di], al
 	inc	di
 	loop @B
@@ -550,6 +551,7 @@ nextobstacle:
 	;omhoog
 	mov cx, OBSTACLEW
 @@:
+      call checkCollide
 	mov es:[di], al
 	add di, SCREENW
 	loop @B
@@ -557,6 +559,7 @@ nextobstacle:
 	;links
 	mov cx, OBSTACLEW
 @@:
+      call checkCollide
 	mov es:[di], al
 	dec di
 	loop @B
@@ -730,60 +733,23 @@ createBeam PROC NEAR
 
 createBeam ENDP
 
-collisionObstaclePlayer PROC NEAR
 
-	push	bx
-	push	ax
-	push	dx
+;procedure verwacht in es de screenBuffer in di de huidige index
+checkCollide PROC NEAR
+      push ax
 
-	mov	bx, 0 ; obstacle counter
-	xor	ax, ax
+      xor ax, ax
+      mov ax, es:[di]
+      cmp ax, PLAYERCOLOR
+      jne endCheckCollide
+      mov [dead], 0001b
 
-
-startCollision:
-	mov	ax, obstacles[bx]
-	cmp 	ax, 0
-	je	endCollision
-
-	cmp 	ax, PLAYERX + PLAYERW
-	jg	nextObstacleAndAdd
-
-	add	bx, 2
-	mov 	ax, obstacles[bx]
-	;y coordinaat
-
-	mov 	dx, bx
-	sub	dx, [position]
-	jns	@F
-	neg	dx
-@@:
-	cmp 	dx, PLAYERH
-	jl	deadJump
-
-	jmp	nextObstacle
-
-	
-deadJump:
-	mov	[dead], 0001b	
-	jmp 	endCollision
+endCheckCollide:
+      pop ax
+      ret 0
 
 
-nextObstacleAndAdd:
-	add	bx, 2
-nextObstacle:
-	add	bx, 2
-	jmp	startCollision
-	
-
-
-
-endCollision:
-	pop	dx	
-	pop 	ax
-	pop 	bx
-	ret 	0
-collisionObstaclePlayer ENDP
-
+checkCollide ENDP
 
 ; _------------------------------- END OF CODE ---------------------------------
 END main
