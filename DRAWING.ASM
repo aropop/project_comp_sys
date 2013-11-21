@@ -735,6 +735,7 @@ createBeam ENDP
 
 
 ;procedure verwacht in es de screenBuffer in di de huidige index
+;in bx verwacht het de huidige index van het obstacle
 checkCollide PROC NEAR
       push ax
 
