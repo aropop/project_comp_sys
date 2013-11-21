@@ -23,6 +23,7 @@ PLAYERSTARTY	equ 0
 PLAYERX		equ 12
 
 MAXOBSTACLES 	equ 5
+MAXBEAMS          equ 5
 OBSTACLEW	equ 5
 
 OBSTACLESPAWNX 	equ 319
@@ -42,6 +43,7 @@ hardOffset	dw 0 ; test variable
 position	dw 0
 positionBeam	dw 0
 obstacles	dw 160,5,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
+beams       dw 10 dup(0)
 levelspeed	dw 1 ;snelheid waarmee de obstacles bewegen
 dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
@@ -229,7 +231,7 @@ renderWorld ENDP
 updateWorld PROC NEAR
 
 	call updateObstacles
-
+      call updateBeams
 
 	ret 0
 updateWorld ENDP
@@ -296,6 +298,91 @@ endUpdateObstacles:
 
 	ret 0
 updateObstacles ENDP
+updateBeams PROC NEAR
+	
+	push ax
+	push dx
+	push bx
+	
+
+	xor ax, ax
+	xor dx, dx
+	xor bx, bx ;bx beam counter
+
+compareLoop:
+      ;stoppen als meer beams dan er plaats is
+      cmp bx, MAXBEAMS*4
+      jge endUpdateBeams
+
+
+	mov ax, beams[bx] ;x coordinaat
+	
+	cmp ax, 0
+	je endUpdateBeams
+
+	mov dx, [levelspeed]
+	add ax, dx
+
+	;kijken of dit nog op het scherm is
+	cmp ax, SCREENW
+	jge deleteAndSwap
+
+	mov beams[bx], ax
+	add bx, 4 ;2 om x positie te springen 2 om y positie
+	jmp compareLoop
+
+deleteAndSwap:
+	;oude index pushen
+	push bx
+      ;de eerste volgende is al leeg moeten we speciaal behandelen
+	add bx, 4
+      cmp bx, MAXBEAMS*4 ;devolgende is al aan het eind
+      jge noOtherBeams
+	mov ax, beams[bx]
+	cmp ax, 0 ;de volgende is leeg
+	je noOtherBeams
+      ;de volgende is niet leeg dan zoeken we tot de laatste hebben gevonden
+findLastBeam:
+      
+      cmp   bx, MAXBEAMS*4
+      je    deleteBeam
+
+      add   bx, 4
+      mov   ax, beams[bx]
+      cmp   ax, 0
+      jne   findLastBeam
+deleteBeam:
+	;terug op de vorige bestaande zetten
+	sub bx, 4
+	mov ax, beams[bx]
+      mov beams[bx], 0
+	add bx, 2 ;y coordinaat
+	mov dx, beams[bx]
+      mov beams[bx], 0
+
+	pop bx
+	mov beams[bx], ax
+	add bx, 2
+	mov beams[bx], dx
+
+	sub bx, 2 ;vanaf hier moet er nog verplaatst worden
+	jmp compareLoop
+
+noOtherBeams:     
+      pop   bx ; bx terug goed zetten  
+      mov   beams[bx], 0 ;x op nul zetten    
+	;de functie is gedaan
+
+endUpdateBeams:
+
+	pop bx
+	pop dx
+	pop ax
+	
+
+
+	ret 0
+updateBeams ENDP
 
 ; Reads keyboard buffer and acts (returns non-zero if loop should end, 0 otherwise)
 handleInput PROC NEAR
@@ -587,15 +674,36 @@ enddrawobstacles:
 drawObstacles ENDP
 
 drawBeam PROC NEAR
-	
+	push	dx
 	push 	di
+	push 	bx
 	push 	cx
 	push 	ax
+      push  es
 
 	mov	ax, seg screenBuffer
 	mov 	es, ax
-	
-	mov	di, [positionBeam]
+	mov	di, offset screenBuffer
+
+	mov 	bx, 0 ; beam counter
+
+draw:	
+      cmp   bx, MAXBEAMS*4
+      jge   done      
+
+	xor	ax, ax
+	mov	ax, beams[bx]
+	cmp 	ax,0
+	je	done
+
+
+	mov	di, offset screenBuffer
+	add	di, beams[bx]
+	add 	bx, 2
+	mov	ax, beams[bx]
+	mov 	dx, SCREENW
+	mul	dx
+	add	di, ax
 	mov 	al, PLAYERCOLOR
 	mov 	cx, 4 
 @@:	
@@ -603,9 +711,16 @@ drawBeam PROC NEAR
 	inc 	di
 	loop 	@B
 
+	add	bx, 2
+	jmp 	draw
+	
+done:	
+      pop   es
 	pop 	ax
 	pop	cx
+	pop 	bx
 	pop	di
+	pop	dx
 	ret 	0
 	
 drawBeam ENDP
@@ -703,30 +818,45 @@ createBeam PROC NEAR
 
 	push ax
 	push dx
+	push bx
 	push di
 
+	xor ax, ax
+	xor bx, bx ;set bx to begin beams-array
+
+loopToEnd:
+	cmp bx, MAXBEAMS*4
+	jge done
+
+	mov ax, beams[bx]
+	cmp ax, 0
+	je calcPos
+
+	xor ax, ax
+	add bx, 4
+	jmp loopToEnd
+
+
+calcPos:
 ;calculate posX
+	xor dx, dx
+	add dx, PLAYERX
+	add dx, PLAYERW
+	mov beams[bx], dx
 
-	mov dx, PLAYERX
-	mov di, PLAYERW
-	add di, dx
+;calculate posY:
 
-;calculate posY
+	add 	bx, 2
+      xor   ax, ax
+	mov 	ax, [position]
+	add 	ax, PLAYERH/2
+	mov 	beams[bx], ax
 
-	mov 	dx, PLAYERH
-	SHR 	dx, 1
-	mov 	ax, SCREENW
-	mul 	dx ;in ax en dx player hoogte naar beneden
-	add	di, ax ;di is juist op positie na
-	mov 	dx, [position]
-	mov	ax, SCREENW
-	mul	dx 
-	add	di, ax
-	mov 	[positionBeam], di
-
+done:
 ;position saved => DONE
 
 	pop di
+	pop bx
 	pop dx
 	pop ax
 	ret 0
