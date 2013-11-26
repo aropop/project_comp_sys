@@ -29,6 +29,7 @@ OBSTACLEW	equ 5
 OBSTACLESPAWNX 	equ 319
 
 TIMEBETWEENBEAMS  equ 3
+BEAMLENGTH        equ 4
 
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
@@ -725,14 +726,25 @@ draw:
 
 
 	mov	di, offset screenBuffer
+      ;pos x
 	add	di, beams[bx]
+
+      ;determine the length of the beam to prevent it being drawn on the opposite
+      ;side of the screen
+	mov   cx, SCREENW
+      sub   cx, beams[bx]
+      cmp   cx, BEAMLENGTH
+      jle    @F
+      mov   cx, BEAMLENGTH
+@@:
+
+      ;pos y
 	add 	bx, 2
 	mov	ax, beams[bx]
 	mov 	dx, SCREENW
 	mul	dx
 	add	di, ax
 	mov 	al, BEAMCOLOR
-	mov 	cx, 4 
 @@:	
 	mov 	es:[di], al
 	inc 	di
