@@ -23,14 +23,16 @@ PLAYERSTARTY	equ 0
 PLAYERX		equ 12
 
 MAXOBSTACLES 	equ 5
-MAXBEAMS          equ 5
+MAXBEAMS          equ 50
 OBSTACLEW	equ 5
 
 OBSTACLESPAWNX 	equ 319
 
+TIMEBETWEENBEAMS  equ 3
 
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
+BEAMCOLOR         equ 34
 ENDCOLOR	equ 64
 
 AMOUNTPIXELS	equ 64000
@@ -42,11 +44,12 @@ oldVideoMode	db ?
 hardOffset	dw 0 ; test variable
 position	dw 0
 positionBeam	dw 0
-obstacles	dw 160,5,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
-beams       dw 10 dup(0)
+obstacles	dw OBSTACLESPAWNX,40,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
+beams       dw 100 dup(0)
 levelspeed	dw 1 ;snelheid waarmee de obstacles bewegen
 dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
+beamInterval db 0
 
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
@@ -208,10 +211,10 @@ renderWorld PROC NEAR
 	jne	drawEndLabel	
 
 	call 	drawTriangle
+	call 	drawBeam
 
 	call	drawObstacles
 
-	call 	drawBeam
 	
 	mov [endcounter], 0001b
 	jmp dontDrawEnd
@@ -263,24 +266,7 @@ compareLoop:
 	jmp compareLoop
 
 deleteAndSwap:
-	;oude index pushen
-	push bx
-	;loopen tot het einde
-@@:
-	add bx, 4
-	mov ax, obstacles[bx]
-	cmp ax, 0
-	je @B
-	;terug op de vorige bestaande zetten
-	sub bx, 4
-	mov ax, obstacles[bx]
-	add bx, 2 ;y coordinaat
-	mov dx, obstacles[bx]
-	pop bx
-	mov obstacles[bx], ax
-	add bx, 2
-	mov obstacles[bx], dx
-	sub bx, 2 ;vanaf hier moet er nog verplaatst worden
+      call deleteObstacle
 	jmp compareLoop
 	
 	
@@ -298,6 +284,44 @@ endUpdateObstacles:
 
 	ret 0
 updateObstacles ENDP
+
+deleteObstacle PROC NEAR
+      push ax
+      push dx
+	;oude index pushen
+	push bx
+      ;kijken of dit de laatste is
+      mov ax, obstacles[bx + 4]
+      cmp ax, 0
+      jne @F
+      mov obstacles[bx], 0
+      mov obstacles[bx + 2], 0
+      pop bx
+      jmp endDeleteObstacle
+	;loopen tot het einde
+@@:
+	add bx, 4
+	mov ax, obstacles[bx]
+	cmp ax, 0
+	jne @B
+	;terug op de vorige bestaande zetten
+	sub bx, 4
+	mov ax, obstacles[bx]
+	add bx, 2 ;y coordinaat
+	mov dx, obstacles[bx]
+	pop bx
+	mov obstacles[bx], ax
+	add bx, 2
+	mov obstacles[bx], dx
+	sub bx, 2 ;vanaf hier moet er nog verplaatst worden
+
+endDeleteObstacle:
+      pop dx
+      pop ax
+      ret 0
+deleteObstacle ENDP
+
+
 updateBeams PROC NEAR
 	
 	push ax
@@ -616,6 +640,9 @@ nextobstacle:
 	mul	dx
 	add	di, ax
 
+      ;sub voor de checkcollide
+      sub   bx, 2
+
 	mov	ax, 0
 	mov 	al, OBSTACLECOLOR
 	;omlaag
@@ -653,7 +680,7 @@ nextobstacle:
 	
 
 	;inc bx en check if last
-	add	bx,2
+	add	bx, 4 ; because we deleted 
 	mov	di, 0
 	mov 	ax, obstacles[bx]
 	cmp 	ax, 0
@@ -704,7 +731,7 @@ draw:
 	mov 	dx, SCREENW
 	mul	dx
 	add	di, ax
-	mov 	al, PLAYERCOLOR
+	mov 	al, BEAMCOLOR
 	mov 	cx, 4 
 @@:	
 	mov 	es:[di], al
@@ -824,6 +851,10 @@ createBeam PROC NEAR
 	xor ax, ax
 	xor bx, bx ;set bx to begin beams-array
 
+      ;test if the interval is nul so that we don't create to much beams
+      cmp [beamInterval], 0
+      jne decInterval
+
 loopToEnd:
 	cmp bx, MAXBEAMS*4
 	jge done
@@ -851,6 +882,13 @@ calcPos:
 	mov 	ax, [position]
 	add 	ax, PLAYERH/2
 	mov 	beams[bx], ax
+      
+      ;set the interval on 
+      mov   [beamInterval], TIMEBETWEENBEAMS
+      jmp   done
+
+decInterval:
+      dec   [beamInterval]
 
 done:
 ;position saved => DONE
@@ -872,8 +910,14 @@ checkCollide PROC NEAR
       xor ax, ax
       mov ax, es:[di]
       cmp ax, PLAYERCOLOR
-      jne endCheckCollide
+      jne checkNext
       mov [dead], 0001b
+checkNext:
+      cmp ax, BEAMCOLOR
+      jne endCheckCollide
+      call deleteObstacle
+
+      
 
 endCheckCollide:
       pop ax
