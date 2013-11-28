@@ -24,7 +24,6 @@ PLAYERX		equ 12
 
 MAXOBSTACLES 	equ 5
 MAXBEAMS          equ 50
-OBSTACLEW	equ 5
 
 OBSTACLESPAWNX 	equ 319
 
@@ -33,7 +32,7 @@ BEAMLENGTH        equ 4
 
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
-BEAMCOLOR         equ 34
+BEAMCOLOR       equ 34
 ENDCOLOR	equ 64
 
 AMOUNTPIXELS	equ 64000
@@ -46,11 +45,12 @@ hardOffset	dw 0 ; test variable
 position	dw 0
 positionBeam	dw 0
 obstacles	dw OBSTACLESPAWNX,40,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
-beams       dw 100 dup(0)
+beams           dw 100 dup(0)
 levelspeed	dw 1 ;snelheid waarmee de obstacles bewegen
+levelObst	dw 10,7,5,3
 dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
-beamInterval db 0
+beamInterval    db 0
 
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
@@ -629,7 +629,8 @@ drawObstacles PROC NEAR
 	mov	ax, obstacles[bx]
 
 	cmp	ax, 0
-	je	enddrawobstacles
+	jne	nextobstacle
+	jmp	enddrawobstacles
 
 nextobstacle:
 	;pos x
@@ -647,16 +648,26 @@ nextobstacle:
 	mov	ax, 0
 	mov 	al, OBSTACLECOLOR
 	;omlaag
-	mov	cx, OBSTACLEW
+	push 	bx
+	xor 	bx, bx
+	mov 	bx, [levelspeed]
+	shr	bx, 1
+	mov	cx, levelObst[bx]
+	pop 	bx
 @@:	
       call checkCollide
 	mov es:[di], al
-	sub	di, SCREENW
+	add	di, SCREENW
 	loop @B
 
 	;rechts
-	mov cx, OBSTACLEW
-	
+	push 	bx
+	xor 	bx, bx
+	mov 	bx, [levelspeed]
+	shr	bx, 1
+	mov	cx, levelObst[bx]
+	pop 	bx
+
 @@:
       call checkCollide
 	mov es:[di], al
@@ -664,15 +675,26 @@ nextobstacle:
 	loop @B
 
 	;omhoog
-	mov cx, OBSTACLEW
+	push 	bx
+	xor 	bx, bx
+	mov 	bx, [levelspeed]
+	shr	bx, 1
+	mov	cx, levelObst[bx]
+	pop 	bx
+	
 @@:
       call checkCollide
 	mov es:[di], al
-	add di, SCREENW
+	sub di, SCREENW
 	loop @B
 
-	;links
-	mov cx, OBSTACLEW
+	push 	bx
+	xor 	bx, bx
+	mov 	bx, [levelspeed]
+	shr	bx, 1
+	mov	cx, levelObst[bx]
+	pop 	bx
+	
 @@:
       call checkCollide
 	mov es:[di], al
@@ -685,7 +707,8 @@ nextobstacle:
 	mov	di, 0
 	mov 	ax, obstacles[bx]
 	cmp 	ax, 0
-	jne	nextobstacle
+	je	enddrawobstacles
+	jmp 	nextobstacle
 
 
 enddrawobstacles:	
