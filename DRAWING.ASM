@@ -984,7 +984,7 @@ beamLoop:
       jge   exitSearch
       
       mov   dx, beams[bx]
-      sub   dx, BEAMLENGTH
+      sub   dx, BEAMLENGTH - 2
       cmp   ax, dx
       je    beamFound
       
