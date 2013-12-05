@@ -26,6 +26,7 @@ MAXOBSTACLES 	equ 5
 MAXBEAMS          equ 50
 
 OBSTACLESPAWNX 	equ 319
+OBSTACLEW	equ 10
 
 TIMEBETWEENBEAMS  equ 3
 BEAMLENGTH        equ 4
@@ -249,6 +250,7 @@ updateObstacles PROC NEAR
 	mov bx, 0 ;bx obstacle counter
 
 compareLoop:
+      xor ax, ax
 	mov ax, obstacles[bx] ;x coordinaat
 	
 	cmp ax, 0
@@ -258,23 +260,19 @@ compareLoop:
 	push ax ;vernieuwde waarden pushen
 	sub ax, OBSTACLESPAWNX
 	add ax, SCREENW
+      sub ax, 1 ;dit is de marge die we toevoegen om ervoor te zorgen dat wanneer iets letterlijk nul is niet als een lege lijst wordt gezien
 	;kijken of dit nog op het scherm is
 	cmp ax, 0
-	pop ax ;voor de volledigheid
 	jle deleteAndSwap
+	pop ax ;voor de volledigheid
 	mov obstacles[bx], ax
 	add bx, 4 ;2 om x positie te springen 2 om y positie
 	jmp compareLoop
-
 deleteAndSwap:
-      call deleteObstacle
+      pop ax      
+    call deleteObstacle
 	jmp compareLoop
 	
-	
-	
-
-
-
 endUpdateObstacles:
 
 	pop bx
@@ -286,18 +284,23 @@ endUpdateObstacles:
 	ret 0
 updateObstacles ENDP
 
+
 deleteObstacle PROC NEAR
       push ax
       push dx
-	;oude index pushen
-	push bx
+      push bx
+
+      xor ax, ax
+
       ;kijken of dit de laatste is
       mov ax, obstacles[bx + 4]
+      add bx, 4
       cmp ax, 0
       jne @F
+
+      pop bx
       mov obstacles[bx], 0
       mov obstacles[bx + 2], 0
-      pop bx
       jmp endDeleteObstacle
 	;loopen tot het einde
 @@:
@@ -305,16 +308,17 @@ deleteObstacle PROC NEAR
 	mov ax, obstacles[bx]
 	cmp ax, 0
 	jne @B
+
 	;terug op de vorige bestaande zetten
 	sub bx, 4
 	mov ax, obstacles[bx]
-	add bx, 2 ;y coordinaat
-	mov dx, obstacles[bx]
+      mov obstacles[bx], 0
+	mov dx, obstacles[bx + 2]
+      mov obstacles[bx + 2], 0
 	pop bx
 	mov obstacles[bx], ax
-	add bx, 2
-	mov obstacles[bx], dx
-	sub bx, 2 ;vanaf hier moet er nog verplaatst worden
+	mov obstacles[bx + 2], dx
+	
 
 endDeleteObstacle:
       pop dx
@@ -350,13 +354,33 @@ compareLoop:
 
 	;kijken of dit nog op het scherm is
 	cmp ax, SCREENW
-	jge deleteAndSwap
+	jge deleteThisBeam
 
 	mov beams[bx], ax
 	add bx, 4 ;2 om x positie te springen 2 om y positie
 	jmp compareLoop
 
-deleteAndSwap:
+deleteThisBeam:
+      call deleteBeam
+      jmp compareLoop
+
+endUpdateBeams:
+
+	pop bx
+	pop dx
+	pop ax
+	
+
+
+	ret 0
+updateBeams ENDP
+;procedure verwacht in bx een counter voor de beam
+deleteBeam PROC NEAR
+      push ax
+      push dx
+      push bx
+
+
 	;oude index pushen
 	push bx
       ;de eerste volgende is al leeg moeten we speciaal behandelen
@@ -370,44 +394,38 @@ deleteAndSwap:
 findLastBeam:
       
       cmp   bx, MAXBEAMS*4
-      je    deleteBeam
+      je    deleteBeamL
 
       add   bx, 4
       mov   ax, beams[bx]
       cmp   ax, 0
       jne   findLastBeam
-deleteBeam:
+deleteBeamL:
 	;terug op de vorige bestaande zetten
 	sub bx, 4
 	mov ax, beams[bx]
       mov beams[bx], 0
-	add bx, 2 ;y coordinaat
-	mov dx, beams[bx]
-      mov beams[bx], 0
+	mov dx, beams[bx+2]
+      mov beams[bx+2], 0
 
 	pop bx
 	mov beams[bx], ax
-	add bx, 2
-	mov beams[bx], dx
+	mov beams[bx+2], dx
 
 	sub bx, 2 ;vanaf hier moet er nog verplaatst worden
-	jmp compareLoop
+	jmp endDeleteBeam
 
 noOtherBeams:     
       pop   bx ; bx terug goed zetten  
-      mov   beams[bx], 0 ;x op nul zetten    
-	;de functie is gedaan
-
-endUpdateBeams:
-
-	pop bx
-	pop dx
-	pop ax
+      mov   beams[bx], 0 ;x op nul zetten  
+      mov   beams[bx+2], 0  
 	
-
-
-	ret 0
-updateBeams ENDP
+endDeleteBeam:
+      pop bx
+      pop dx
+      pop ax
+      ret 0
+deleteBeam ENDP
 
 ; Reads keyboard buffer and acts (returns non-zero if loop should end, 0 otherwise)
 handleInput PROC NEAR
@@ -629,86 +647,69 @@ drawObstacles PROC NEAR
 	mov	ax, obstacles[bx]
 
 	cmp	ax, 0
-	jne	nextobstacle
-	jmp	enddrawobstacles
+	je	enddrawobstacles
 
 nextobstacle:
+      mov   di, offset screenBuffer
 	;pos x
 	add 	di, obstacles[bx]
 	;pos y
-	add 	bx,2 ;Add 2 because we use words
-	mov 	ax, obstacles[bx]
+	mov 	ax, obstacles[bx+2]
 	mov 	dx, SCREENW
 	mul	dx
 	add	di, ax
-
-      ;sub voor de checkcollide
-      sub   bx, 2
+      
+      ;make sure dx is null for checking if deleted
 
 	mov	ax, 0
 	mov 	al, OBSTACLECOLOR
 	;omlaag
-	push 	bx
-	xor 	bx, bx
-	mov 	bx, [levelspeed]
-	shr	bx, 1
-	mov	cx, levelObst[bx]
-	pop 	bx
+	mov	cx, OBSTACLEW
 @@:	
       call checkCollide
+      cmp   dx, 1 ;check if deleted
+      je    toNext
 	mov es:[di], al
 	add	di, SCREENW
 	loop @B
 
 	;rechts
-	push 	bx
-	xor 	bx, bx
-	mov 	bx, [levelspeed]
-	shr	bx, 1
-	mov	cx, levelObst[bx]
-	pop 	bx
-
+	mov cx, OBSTACLEW	
 @@:
       call checkCollide
+      cmp   dx, 1 ;check if deleted
+      je    toNext
 	mov es:[di], al
 	inc	di
 	loop @B
 
 	;omhoog
-	push 	bx
-	xor 	bx, bx
-	mov 	bx, [levelspeed]
-	shr	bx, 1
-	mov	cx, levelObst[bx]
-	pop 	bx
-	
+	mov cx, OBSTACLEW
 @@:
       call checkCollide
+      cmp   dx, 1 ;check if deleted
+      je    toNext
 	mov es:[di], al
 	sub di, SCREENW
 	loop @B
 
-	push 	bx
-	xor 	bx, bx
-	mov 	bx, [levelspeed]
-	shr	bx, 1
-	mov	cx, levelObst[bx]
-	pop 	bx
-	
+	;links
+	mov cx, OBSTACLEW
 @@:
       call checkCollide
+      cmp   dx, 1 ;check if deleted
+      je    toNext
 	mov es:[di], al
 	dec di
 	loop @B
 	
-
+toNext:
 	;inc bx en check if last
 	add	bx, 4 ; because we deleted 
 	mov	di, 0
 	mov 	ax, obstacles[bx]
 	cmp 	ax, 0
-	je	enddrawobstacles
-	jmp 	nextobstacle
+	jne	nextobstacle
 
 
 enddrawobstacles:	
@@ -937,29 +938,70 @@ done:
 createBeam ENDP
 
 
+
 ;procedure verwacht in es de screenBuffer in di de huidige index
 ;in bx verwacht het de huidige index van het obstacle
 checkCollide PROC NEAR
       push ax
+      push di
 
       xor ax, ax
-      mov ax, es:[di]
-      cmp ax, PLAYERCOLOR
+      mov al, es:[di]
+      cmp al, PLAYERCOLOR
       jne checkNext
       mov [dead], 0001b
-checkNext:
-      cmp ax, BEAMCOLOR
-      jne endCheckCollide
-      call deleteObstacle
 
+checkNext:
+      cmp al, BEAMCOLOR
+      jne endCheckCollide
+      mov   dx, 1 ; set delete on true
+      push obstacles[bx] ;push the x as parameter
+      call searchBeamForX
+      call deleteObstacle
       
 
 endCheckCollide:
+      pop di
       pop ax
       ret 0
 
 
 checkCollide ENDP
+
+searchBeamForX PROC NEAR
+      push        bp
+      mov        bp, sp      
+
+      push  ax
+      push  bx ;bx is de beam counter
+      push  dx
+      
+      mov   ax, [bp + 4][0]  ;parameter uitlezen  
+      xor   bx, bx  
+      
+beamLoop:
+      cmp   bx, MAXBEAMS*4
+      jge   exitSearch
+      
+      mov   dx, beams[bx]
+      sub   dx, BEAMLENGTH
+      cmp   ax, dx
+      je    beamFound
+      
+      add   bx, 4
+      jmp   beamLoop 
+        
+
+beamFound:
+      call  deleteBeam
+
+exitSearch:
+      pop   dx
+      pop   bx
+      pop   ax
+      pop   bp
+      ret   2
+searchBeamForX ENDP
 
 ; _------------------------------- END OF CODE ---------------------------------
 END main
