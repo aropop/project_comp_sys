@@ -25,6 +25,7 @@ MAXBEAMS          equ 50
 
 OBSTACLESPAWNX 	equ 319
 OBSTACLEW	equ 10
+TIMEBETWEENOBST  equ 25
 
 TIMEBETWEENBEAMS  equ 3
 BEAMLENGTH        equ 4
@@ -45,11 +46,16 @@ position	dw 0
 positionBeam	dw 0
 obstacles	dw OBSTACLESPAWNX,40,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 beams           dw 100 dup(0)
+level    	dw 2
 levelspeed	dw 1;snelheid waarmee de obstacles bewegen
 levelObst	dw 10,7,5,3
 dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
 beamInterval    db 0
+obstInterval	db 0
+
+tempTime 	dw 0
+time		dw 0
 
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
@@ -212,7 +218,7 @@ renderWorld PROC NEAR
 
 	call 	drawTriangle
 	call 	drawBeam
-
+        call  	createObstacle
 	call	drawObstacles
 
 	
@@ -848,6 +854,9 @@ createObstacle PROC NEAR
 	push ax
 
 	mov bx, 0
+	cmp [obstInterval], 0
+        jne decInterval
+
 loopToEnd:
 	mov ax, obstacles[bx]
 	cmp ax, 0
@@ -856,7 +865,7 @@ loopToEnd:
 	mov ax, MAXOBSTACLES
 	shl ax, 1
 	cmp bx, ax
-	jge done ;no more place for new obstacles
+	jge resetInterval ;no more place for new obstacles
 	add bx, 2
 	jmp loopToEnd
 
@@ -867,6 +876,14 @@ rightindex:
 	mov obstacles[bx], OBSTACLESPAWNX
 	add bx, 2
 	mov obstacles[bx], ax	
+	jmp resetInterval
+
+decInterval:
+	dec [obstInterval]
+	jmp done
+  
+resetInterval:
+	mov [obstInterval], TIMEBETWEENOBST
 
 done:
 	pop ax
@@ -1000,6 +1017,36 @@ exitSearch:
       pop   bp
       ret   2
 searchBeamForX ENDP
+
+updateTime PROC NEAR
+   
+   push ax
+ 
+   inc [tempTime]
+   mov ax, 1
+   cmp [tempTime], ax
+   jl done
+   inc [time]
+   mov [tempTime], 0
+ 
+ done:
+    pop ax
+   ret 0
+ updateTime ENDP
+ 
+ updateLevels PROC NEAR
+   
+   push ax
+   
+   mov ax, 1000
+   cmp [time], ax
+   jl done
+   add [level], 2
+   mov [time], 0
+ done:
+   pop ax
+   ret 0
+ updateLevels ENDP
 
 ; _------------------------------- END OF CODE ---------------------------------
 END main
