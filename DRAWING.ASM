@@ -48,7 +48,7 @@ obstacles	dw OBSTACLESPAWNX,40,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 beams           dw 100 dup(0)
 level    	dw 2
 levelspeed	dw 1;snelheid waarmee de obstacles bewegen
-levelObst	dw 10,7,5,3
+levelObst	dw 13,10,7,5,3
 dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
 beamInterval    db 0
@@ -241,6 +241,8 @@ updateWorld PROC NEAR
 
 	call updateObstacles
       call updateBeams
+	call updateTime
+	call updateLevels
 
 	ret 0
 updateWorld ENDP
@@ -651,7 +653,8 @@ drawObstacles PROC NEAR
 	mov	ax, obstacles[bx]
 
 	cmp	ax, 0
-	je	enddrawobstacles
+	jne	nextobstacle
+	jmp	enddrawobstacles
 
 nextobstacle:
       mov   di, offset screenBuffer
@@ -729,7 +732,8 @@ toNext:
 	mov	di, 0
 	mov 	ax, obstacles[bx]
 	cmp 	ax, 0
-	jne	nextobstacle
+	je	enddrawobstacles
+	jmp	nextobstacle
 
 
 enddrawobstacles:	
