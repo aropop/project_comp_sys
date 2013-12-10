@@ -668,7 +668,11 @@ nextobstacle:
 	mov	ax, 0
 	mov 	al, OBSTACLECOLOR
 	;omlaag
-	mov	cx, OBSTACLEW
+	push 	bx
+	xor 	bx, bx
+	mov   bx, [level]
+	mov	cx, levelObst[bx]
+	pop 	bx
 @@:	
       call checkCollide
       cmp   dx, 1 ;check if deleted
@@ -678,7 +682,11 @@ nextobstacle:
 	loop @B
 
 	;rechts
-	mov cx, OBSTACLEW	
+	push 	bx
+	xor 	bx, bx
+	mov   bx, [level]
+	mov	cx, levelObst[bx]
+	pop 	bx
 @@:
       call checkCollide
       cmp   dx, 1 ;check if deleted
@@ -688,7 +696,11 @@ nextobstacle:
 	loop @B
 
 	;omhoog
-	mov cx, OBSTACLEW
+	push 	bx
+	xor 	bx, bx
+	mov   bx, [level]
+	mov	cx, levelObst[bx]
+	pop 	bx
 @@:
       call checkCollide
       cmp   dx, 1 ;check if deleted
@@ -698,7 +710,11 @@ nextobstacle:
 	loop @B
 
 	;links
-	mov cx, OBSTACLEW
+	push 	bx
+	xor 	bx, bx
+	mov   bx, [level]
+	mov	cx, levelObst[bx]
+	pop 	bx
 @@:
       call checkCollide
       cmp   dx, 1 ;check if deleted
