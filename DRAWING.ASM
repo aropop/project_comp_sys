@@ -1,7 +1,5 @@
 ; ==============================================================================
-; Example for buffered drawing in mode 13h.
-; Example showing palette manipulation via port IO.
-; Example for a very generic game-loop.
+;     SHOOTING OBSTACLES GAME
 ; ==============================================================================
 .MODEL large	; multiple data segments and multiple code segments
 .STACK 2048  	; stack
@@ -47,7 +45,7 @@ position	dw 0
 positionBeam	dw 0
 obstacles	dw OBSTACLESPAWNX,40,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
 beams           dw 100 dup(0)
-levelspeed	dw 1 ;snelheid waarmee de obstacles bewegen
+levelspeed	dw 1;snelheid waarmee de obstacles bewegen
 levelObst	dw 10,7,5,3
 dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
@@ -818,7 +816,7 @@ goUp PROC NEAR
 	cmp	bx, [position]
 	jae	@f
 	
-	mov 	bx, 2
+	mov 	bx, 3
 	neg 	bx
 	add 	[position], bx ;-2 optellen
 @@:
@@ -838,7 +836,7 @@ goDown PROC NEAR
 	dec ax ; fout marge
 	cmp 	[position], ax
 	ja	@F
-	add	[position], 2
+	add	[position], 3
 @@:
 	pop bx
 	pop ax
