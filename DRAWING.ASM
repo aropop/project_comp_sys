@@ -889,6 +889,7 @@ goDown ENDP
 createObstacle PROC NEAR
 	push bx
 	push ax
+      push dx
 
 	mov bx, 0
 	cmp [obstInterval], 0
@@ -909,7 +910,12 @@ loopToEnd:
 
 rightindex:
 	call rand
-	and ax, 00CFh
+      mov dx, SCREENH
+      push bx
+      mov bx, [level]
+      sub dx, levelObst[bx]
+      pop bx
+	and ax, dx
 	mov obstacles[bx], OBSTACLESPAWNX
 	add bx, 2
 	mov obstacles[bx], ax	
@@ -923,6 +929,7 @@ resetInterval:
 	mov [obstInterval], TIMEBETWEENOBST
 
 done:
+      pop dx
 	pop ax
 	pop bx
 	ret 0
