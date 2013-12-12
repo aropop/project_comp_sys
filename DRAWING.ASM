@@ -20,12 +20,12 @@ PLAYERW		equ 10
 PLAYERSTARTY	equ 0
 PLAYERX		equ 12
 
-MAXOBSTACLES 	equ 5
+MAXOBSTACLES 	equ 25
 MAXBEAMS          equ 50
 
 OBSTACLESPAWNX 	equ 319
 OBSTACLEW	equ 10
-TIMEBETWEENOBST  equ 25
+TIMEBETWEENOBST  equ 10
 
 TIMEBETWEENBEAMS  equ 3
 BEAMLENGTH        equ 4
@@ -44,11 +44,12 @@ oldVideoMode	db ?
 hardOffset	dw 0 ; test variable
 position	dw 0
 positionBeam	dw 0
-obstacles	dw OBSTACLESPAWNX,40,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
+obstacles	dw 50 dup(0) ;affwisselde x,y van een obstacle
 beams           dw 100 dup(0)
 level    	dw 2
+levelmode	dw 0
 levelspeed	dw 1;snelheid waarmee de obstacles bewegen
-levelObst	dw 13,10,7,5,3
+levelObst	dw 15,13,10,7,5,3,0
 dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
 beamInterval    db 0
@@ -721,7 +722,7 @@ nextobstacle:
 	;links
 	push 	bx
 	xor 	bx, bx
-	mov   bx, [level]
+	mov     bx, [level]
 	mov	cx, levelObst[bx]
 	pop 	bx
 @@:
@@ -875,7 +876,7 @@ goDown PROC NEAR
 	ret 0
 goDown ENDP
 
-createObstacle PROC NEAR
+bstacle PROC NEAR
 	push bx
 	push ax
 
@@ -1064,13 +1065,27 @@ updateTime PROC NEAR
  updateLevels PROC NEAR
    
    push ax
+   push bx
    
-   mov ax, 1000
+   mov ax, 100
    cmp [time], ax
    jl done
+   cmp [levelmode], 0
+   jz changespeed
+   mov bx, [level]
+   cmp levelObst[bx+2],0
+   jz resetTime
    add [level], 2
-   mov [time], 0
+   mov [levelmode], 0
+   jmp resetTime
+changespeed: 
+   inc [levelspeed]
+   inc [levelmode]
+   jmp resetTime
+resetTime:
+   mov [time],0
  done:
+   pop bx
    pop ax
    ret 0
  updateLevels ENDP
