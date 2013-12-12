@@ -683,6 +683,7 @@ nextobstacle:
 	mov es:[di], al
 	add	di, SCREENW
 	loop @B
+ 
 
 	;rechts
 	push 	bx
@@ -693,16 +694,18 @@ nextobstacle:
       pop   bx
       mov   dx, SCREENW
       sub   dx, obstacles[bx] 
-      cmp   cx, dx
-      jle @F
+      cmp   dx, cx
+      jge @F
       mov   cx, dx
 @@:
-      call checkCollide
+      xor   dx,dx
+      call  checkCollide
       cmp   dx, 1 ;check if deleted
       je    toNext
-	mov es:[di], al
+	mov   es:[di], al
 	inc	di
-	loop @B
+	loop  @B
+      
 
 	;omhoog
 	push 	bx
@@ -717,20 +720,28 @@ nextobstacle:
 	mov es:[di], al
 	sub di, SCREENW
 	loop @B
-
+notUp:
+      xor   dx,dx
 	;links
 	push 	bx
 	xor 	bx, bx
+      xor   dx, dx
 	mov   bx, [level]
 	mov	cx, levelObst[bx]
-	pop 	bx
+      pop   bx
+      mov   dx, SCREENW
+      sub   dx, obstacles[bx] 
+      cmp   dx, cx
+      jge @F
+      mov   cx, dx
 @@:
-      call checkCollide
+      xor   dx,dx
+      call  checkCollide
       cmp   dx, 1 ;check if deleted
       je    toNext
-	mov es:[di], al
-	dec di
-	loop @B
+	mov   es:[di], al
+	dec   di
+	loop  @B
 	
 toNext:
 	;inc bx en check if last
