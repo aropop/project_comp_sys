@@ -687,9 +687,15 @@ nextobstacle:
 	;rechts
 	push 	bx
 	xor 	bx, bx
+      xor   dx, dx
 	mov   bx, [level]
 	mov	cx, levelObst[bx]
-	pop 	bx
+      pop   bx
+      mov   dx, SCREENW
+      sub   dx, obstacles[bx] 
+      cmp   cx, dx
+      jle @F
+      mov   cx, dx
 @@:
       call checkCollide
       cmp   dx, 1 ;check if deleted
@@ -1019,10 +1025,11 @@ beamLoop:
       jge   exitSearch
       
       mov   dx, beams[bx]
-      sub   dx, BEAMLENGTH - 2
+      sub   dx, BEAMLENGTH - 4
       cmp   ax, dx
       je    beamFound
-      
+
+ 
       add   bx, 4
       jmp   beamLoop 
         
