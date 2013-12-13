@@ -1005,7 +1005,15 @@ loopToEnd:
 
 rightindex:
 	call rand
-	and ax, 00CFh
+      ;make sure not out of bounds
+      mov dx, SCREENH
+      push bx
+      mov bx, [level]
+      sub dx, levelObst[bx]
+      sub dx, 5 ;margin
+      pop bx
+      and ax, dx
+
 	mov obstacles[bx], OBSTACLESPAWNX
 	add bx, 2
 	mov obstacles[bx], ax	
