@@ -20,12 +20,12 @@ PLAYERW		equ 10
 PLAYERSTARTY	equ 0
 PLAYERX		equ 12
 
-MAXOBSTACLES 	equ 5
+MAXOBSTACLES 	equ 25
 MAXBEAMS          equ 50
 
 OBSTACLESPAWNX 	equ 319
 OBSTACLEW	equ 10
-TIMEBETWEENOBST  equ 25
+TIMEBETWEENOBST  equ 10
 
 TIMEBETWEENBEAMS  equ 3
 BEAMLENGTH        equ 4
@@ -44,11 +44,12 @@ oldVideoMode	db ?
 hardOffset	dw 0 ; test variable
 position	dw 0
 positionBeam	dw 0
-obstacles	dw OBSTACLESPAWNX,40,0,0,0,0,0,0,0,0 ;affwisselde x,y van een obstacle
+obstacles	dw 50 dup(0) ;affwisselde x,y van een obstacle
 beams           dw 100 dup(0)
 level    	dw 2
+levelmode	dw 0
 levelspeed	dw 1;snelheid waarmee de obstacles bewegen
-levelObst	dw 13,10,7,5,3
+levelObst	dw 15,13,10,7,5,3,0
 dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
 beamInterval    db 0
@@ -56,6 +57,25 @@ obstInterval	db 0
 
 tempTime 	dw 0
 time		dw 0
+
+spaceship byte 17,11
+            byte PLAYERCOLOR,PLAYERCOLOR,PLAYERCOLOR,0,0,0,0,0,0,0,0
+            byte 0,PLAYERCOLOR,0,PLAYERCOLOR,PLAYERCOLOR,0,0,0,0,0,0 
+            byte 0,PLAYERCOLOR,0,0,0,PLAYERCOLOR,0,0,0,0,0
+            byte 0,0,PLAYERCOLOR,0,0,PLAYERCOLOR,PLAYERCOLOR,0,0,0,0
+            byte 0,0,0,PLAYERCOLOR,0,PLAYERCOLOR,PLAYERCOLOR,PLAYERCOLOR,0,0,0
+            byte 0,0,0,PLAYERCOLOR,0,0,PLAYERCOLOR,PLAYERCOLOR,0,0,0
+            byte 0,0,PLAYERCOLOR,PLAYERCOLOR,0,0,0,0,PLAYERCOLOR,0,0
+            byte 0,PLAYERCOLOR,0,0,0,PLAYERCOLOR,PLAYERCOLOR,0,PLAYERCOLOR,0,0
+            byte 0,PLAYERCOLOR,0,0,0,PLAYERCOLOR,PLAYERCOLOR,PLAYERCOLOR,PLAYERCOLOR,PLAYERCOLOR,PLAYERCOLOR
+            byte 0,PLAYERCOLOR,0,0,0,0,0,0,PLAYERCOLOR,0,0
+            byte 0,0,PLAYERCOLOR,PLAYERCOLOR,0,0,0,0,PLAYERCOLOR,0,0
+            byte 0,0,0,PLAYERCOLOR,0,0,0,PLAYERCOLOR,0,0,0
+            byte 0,0,0,PLAYERCOLOR,0,0,0,PLAYERCOLOR,0,0,0
+            byte 0,0,PLAYERCOLOR,0,0,0,PLAYERCOLOR,0,0,0,0
+            byte 0,PLAYERCOLOR,0,0,0,PLAYERCOLOR,0,0,0,0,0
+            byte 0,PLAYERCOLOR,0,PLAYERCOLOR,PLAYERCOLOR,0,0,0,0,0,0
+            byte PLAYERCOLOR,PLAYERCOLOR,PLAYERCOLOR,0,0,0,0,0,0,0,0
 
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
@@ -216,9 +236,10 @@ renderWorld PROC NEAR
 	cmp 	ax, 00000000b
 	jne	drawEndLabel	
 
-	call 	drawTriangle
-	call 	drawBeam
-        call  	createObstacle
+	;call 	drawTriangle
+      call  drawPlayer	
+      call 	drawBeam
+      call  createObstacle
 	call	drawObstacles
 
 	
@@ -562,6 +583,84 @@ drawRect PROC NEAR
 drawRect ENDP
 
 
+drawPlayer PROC NEAR
+      push  di
+      push  ax
+
+      mov	di, offset screenBuffer	
+	;positie X
+	add di, PLAYERX ;di contains position	
+	;positie Y
+	mov 	ax, [position]
+	mov 	dx, SCREENW
+	mul	dx
+	add	di, ax
+      
+      mov ax, offset spaceship
+      push ax
+      push di
+      call drawArray
+
+      pop ax
+      pop di
+      ret   0
+drawPlayer ENDP
+
+;Takes the offset and position as parameters
+drawArray PROC NEAR
+	push bp
+	mov bp, sp
+	
+	push ax
+	push bx
+	push cx
+	push si
+	push ds
+	push di
+	push es
+	
+	cld
+	;screenbuffer
+	mov ax, seg screenBuffer
+	mov es, ax
+	mov ax, [bp+4][0]
+	mov di, ax
+	;array
+	mov ax, @data
+	mov ds, ax
+	mov ax, [bp+4][2]
+	mov si, ax
+	;array-width and array-height
+	lodsw
+	mov cx, 0
+	mov bh, ah ;width
+	mov bl, al ;height
+	
+arrayLoop:
+	mov cl, bh
+	rep movsb ;copy row
+	mov ax, SCREENW
+	mov cl, bh
+	sub ax, cx
+	add di, ax ;next row
+	dec bl
+	jnz arrayLoop
+	
+	pop es
+	pop di
+	pop ds
+	pop si
+	pop cx
+	pop bx
+	pop ax
+	
+	mov sp, bp
+	pop bp
+	ret 4
+
+      
+drawArray ENDP
+
 ;Draws a triangle
 ;W,H and position y is passed on stack
 
@@ -683,7 +782,6 @@ nextobstacle:
 	mov es:[di], al
 	add	di, SCREENW
 	loop @B
- 
 
 	;rechts
 	push 	bx
@@ -694,18 +792,16 @@ nextobstacle:
       pop   bx
       mov   dx, SCREENW
       sub   dx, obstacles[bx] 
-      cmp   dx, cx
-      jge @F
+      cmp   cx, dx
+      jle @F
       mov   cx, dx
 @@:
-      xor   dx,dx
-      call  checkCollide
+      call checkCollide
       cmp   dx, 1 ;check if deleted
       je    toNext
-	mov   es:[di], al
+	mov es:[di], al
 	inc	di
-	loop  @B
-      
+	loop @B
 
 	;omhoog
 	push 	bx
@@ -889,7 +985,6 @@ goDown ENDP
 createObstacle PROC NEAR
 	push bx
 	push ax
-      push dx
 
 	mov bx, 0
 	cmp [obstInterval], 0
@@ -910,12 +1005,7 @@ loopToEnd:
 
 rightindex:
 	call rand
-      mov dx, SCREENH
-      push bx
-      mov bx, [level]
-      sub dx, levelObst[bx]
-      pop bx
-	and ax, dx
+	and ax, 00CFh
 	mov obstacles[bx], OBSTACLESPAWNX
 	add bx, 2
 	mov obstacles[bx], ax	
@@ -929,7 +1019,6 @@ resetInterval:
 	mov [obstInterval], TIMEBETWEENOBST
 
 done:
-      pop dx
 	pop ax
 	pop bx
 	ret 0
@@ -1082,13 +1171,27 @@ updateTime PROC NEAR
  updateLevels PROC NEAR
    
    push ax
+   push bx
    
-   mov ax, 1000
+   mov ax, 100
    cmp [time], ax
    jl done
+   cmp [levelmode], 0
+   jz changespeed
+   mov bx, [level]
+   cmp levelObst[bx+2],0
+   jz resetTime
    add [level], 2
-   mov [time], 0
+   mov [levelmode], 0
+   jmp resetTime
+changespeed: 
+   inc [levelspeed]
+   inc [levelmode]
+   jmp resetTime
+resetTime:
+   mov [time],0
  done:
+   pop bx
    pop ax
    ret 0
  updateLevels ENDP
