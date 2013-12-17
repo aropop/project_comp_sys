@@ -1011,9 +1011,23 @@ beamLoop:
       jge   exitSearch
       
       mov   dx, beams[bx]
-      sub   dx, BEAMLENGTH - 4
+      sub   dx, BEAMLENGTH
       cmp   ax, dx
       je    beamFound
+      mov   cx, 5
+@@:
+      inc   dx
+      cmp   ax, dx
+      je    beamFound
+      loop  @B
+
+      mov   cx, 5
+      add   dx, 5
+@@:
+      dec   dx
+      cmp   ax, dx
+      je    beamFound
+      loop  @B
 
  
       add   bx, 4
