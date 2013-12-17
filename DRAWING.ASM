@@ -854,6 +854,8 @@ goDown PROC NEAR
 goDown ENDP
 
 createObstacle PROC NEAR
+      push cx
+      push dx
 	push bx
 	push ax
 
@@ -905,6 +907,8 @@ resetInterval:
 done:
 	pop ax
 	pop bx
+      pop dx
+      pop cx
 	ret 0
 createObstacle ENDP
 
