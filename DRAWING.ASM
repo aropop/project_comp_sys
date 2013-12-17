@@ -859,7 +859,7 @@ createObstacle PROC NEAR
 
 	mov bx, 0
 	cmp [obstInterval], 0
-        jne decInterval
+      jg decInterval
 
 loopToEnd:
 	mov ax, obstacles[bx]
@@ -891,7 +891,12 @@ rightindex:
 	jmp resetInterval
 
 decInterval:
-	dec [obstInterval]
+      mov   cx, [level]
+      shr   cx, 1
+@@:
+	sub [obstInterval], 1
+      js  done   
+      loop @B
 	jmp done
   
 resetInterval:
