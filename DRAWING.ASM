@@ -54,6 +54,7 @@ dead		db 0 ;bepaald of je dood bent
 endcounter	db 0
 beamInterval    db 0
 obstInterval	db 0
+drawCheck   db 0 ;checkt of er halve dingen getekend moeten worden of niet
 
 tempTime 	dw 0
 time		dw 0
@@ -606,6 +607,7 @@ drawObstacles PROC NEAR
 	jmp	enddrawobstacles
 
 nextobstacle:
+      mov   [drawCheck], 0
       mov   di, offset screenBuffer
 	;pos x
 	add 	di, obstacles[bx]
@@ -628,11 +630,14 @@ nextobstacle:
 @@:	
       call checkCollide
       cmp   dx, 1 ;check if deleted
-      je    toNext
+      je    toNextSub
 	mov es:[di], al
 	add	di, SCREENW
 	loop @B
-
+      jmp   skip
+toNextSub:
+      jmp   toNext
+skip:
 	;rechts
 	push 	bx
 	xor 	bx, bx
@@ -641,10 +646,11 @@ nextobstacle:
 	mov	cx, levelObst[bx]
       pop   bx
       mov   dx, SCREENW
-      sub   dx, obstacles[bx] 
+      sub   dx, obstacles[bx]      
       cmp   cx, dx
-      jle @F
+      jl @F
       mov   cx, dx
+      mov   [drawCheck], 1
 @@:
       call checkCollide
       cmp   dx, 1 ;check if deleted
@@ -654,6 +660,8 @@ nextobstacle:
 	loop @B
 
 	;omhoog
+      cmp   [drawCheck], 1
+      je    notUp
 	push 	bx
 	xor 	bx, bx
 	mov   bx, [level]
@@ -666,7 +674,20 @@ nextobstacle:
 	mov es:[di], al
 	sub di, SCREENW
 	loop @B
+      jmp   next
 notUp:
+      push  bx
+      push  ax
+      xor   bx,bx
+      mov   bx, [level]
+      mov   dx, SCREENW
+      mov   ax, levelObst[bx]
+      mul   dx
+      sub   di, ax
+      dec   di
+      pop   ax
+      pop   bx
+next:
       xor   dx,dx
 	;links
 	push 	bx
