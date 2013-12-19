@@ -35,6 +35,8 @@ TIMEBETWEENLEVELS equ 1000
 ENEMYSCORE	equ 3
 BULLETPENALTY	equ 1
 
+SCORE_PLACE       equ 3004
+TEXTCOLOR         equ 20
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
 BEAMCOLOR       equ 34
@@ -82,6 +84,66 @@ spaceship byte 17,11
             byte 0,PLAYERCOLOR,0,0,0,PLAYERCOLOR,0,0,0,0,0
             byte 0,PLAYERCOLOR,0,PLAYERCOLOR,PLAYERCOLOR,0,0,0,0,0,0
             byte PLAYERCOLOR,PLAYERCOLOR,PLAYERCOLOR,0,0,0,0,0,0,0,0
+one_num byte 5,6
+ byte 	0,0,TEXTCOLOR,TEXTCOLOR,0,0
+ byte	0,TEXTCOLOR,0,TEXTCOLOR,0,0
+ byte 	0,0,0,TEXTCOLOR,0,0
+ byte 	0,0,0,TEXTCOLOR,0,0
+ byte 	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR
+two_num byte 5,6
+ byte 	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte	0,0,0,0,0,TEXTCOLOR
+ byte 	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte 	0,TEXTCOLOR,0,0,0,0
+ byte	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR
+three_num byte 5,6
+ byte 	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte	0,0,0,0,0,TEXTCOLOR
+ byte	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte 	0,0,0,0,0,TEXTCOLOR
+ byte 	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+four_num byte 5,6
+ byte 	0,TEXTCOLOR,0,0,TEXTCOLOR,0
+ byte 	0,TEXTCOLOR,0,0,TEXTCOLOR,0
+ byte	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR
+ byte 	0,0,0,0,TEXTCOLOR,0
+ byte	0,0,0,0,TEXTCOLOR,0
+five_num byte 5,6
+ byte 	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR
+ byte 	0,TEXTCOLOR,0,0,0,0
+ byte 	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte 	0,0,0,0,0,TEXTCOLOR
+ byte	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+six_num byte 5,6
+ byte	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte	0,TEXTCOLOR,0,0,0,0
+ byte 	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte 	0,TEXTCOLOR,0,0,0,TEXTCOLOR
+ byte	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+seven_num byte 5,6
+ byte	0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR
+ byte 	0,TEXTCOLOR,0,0,0,TEXTCOLOR
+ byte	0,0,0,0,TEXTCOLOR,0
+ byte	0,0,0,TEXTCOLOR,0,0
+ byte	0,0,TEXTCOLOR,0,0,0
+eight_num byte 5,6
+ byte	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte	0,TEXTCOLOR,0,0,0,TEXTCOLOR
+ byte	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte	0,TEXTCOLOR,0,0,0,TEXTCOLOR
+ byte	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+nine_num byte 5,6
+ byte	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte 	0,TEXTCOLOR,0,0,0,TEXTCOLOR
+ byte	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR
+ byte	0,0,0,0,0,TEXTCOLOR
+ byte	0,0,0,0,0,TEXTCOLOR
+zero_num byte 5,6
+ byte	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
+ byte	0,TEXTCOLOR,0,0,TEXTCOLOR,TEXTCOLOR
+ byte	0,TEXTCOLOR,0,TEXTCOLOR,0,TEXTCOLOR
+ byte	0,TEXTCOLOR,TEXTCOLOR,0,0,TEXTCOLOR
+ byte	0,0,TEXTCOLOR,TEXTCOLOR,TEXTCOLOR,0
 
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
@@ -119,7 +181,7 @@ main PROC NEAR
 	mov	[position], PLAYERSTARTY ;ax bevat de y coordinaat van de 
 
 @main_loop:	
-
+      call createBeam
 	push ax ;preserve
 	xor ax, ax
 	mov ah, [dead]
@@ -826,6 +888,109 @@ drawEnd PROC NEAR
 	ret 0
 drawEnd ENDP
 
+drawNumber PROC NEAR
+	push bp
+	mov bp, sp
+
+      push ax
+      push dx
+      push cx
+
+      mov ax, [bp + 4][2] ;number to print
+      mov dx, [bp + 4][0] ;offset
+      mov cx, SCORE_PLACE
+      sub cx, dx
+      mov dx, cx
+
+      cmp ax, 0
+      jne @F
+      mov ax, offset zero_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+@@:
+      cmp ax, 1
+      jne @F
+      mov ax, offset one_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+@@:
+      cmp ax, 2
+      jne @F
+      mov ax, offset two_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+@@:       
+      cmp ax, 3
+      jne @F
+      mov ax, offset three_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+@@:
+      cmp ax, 4
+      jne @F
+      mov ax, offset four_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+@@:
+      cmp ax, 5
+      jne @F
+      mov ax, offset five_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+@@:
+      cmp ax, 6
+      jne @F
+      mov ax, offset six_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+@@:
+      cmp ax, 7
+      jne @F
+      mov ax, offset seven_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+@@:
+      cmp ax, 8
+      jne @F
+      mov ax, offset eight_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+@@:
+      cmp ax, 4
+      jne endDrawNumber
+      mov ax, offset nine_num
+      push ax
+      push dx
+      call drawArray
+      jmp endDrawNumber
+    
+endDrawNumber:
+      pop cx  
+      pop dx
+      pop ax
+      mov sp, bp
+	pop bp
+      ret 4
+drawNumber ENDP
+
 goUp PROC NEAR
 	push 	bx ;saven om zelfde staat te garanderen
 	mov 	bx, 1
@@ -975,7 +1140,9 @@ calcPos:
       
       ;set the interval on 
       mov   [beamInterval], TIMEBETWEENBEAMS
-      sub   [score],BULLETPENALTY
+      mov   ax, [score]
+      sub   ax,BULLETPENALTY
+      mov   [score], ax
       jmp   done
 
 decInterval:
@@ -1123,21 +1290,24 @@ drawScore PROC NEAR
   push ax
   push bx
   push dx
+  push cx
 
   mov bx,0
 
+  mov ax, [score]
 @@:
-  move ax, [score]
-  div 10
+  mov cx, 10
+  div cx
   push dx
   push bx
   call drawNumber
   inc bx
   cmp ax,0
-  je done
+  jle done
   jmp @B
 
 done:
+  pop cx
   pop dx
   pop bx
   pop ax
