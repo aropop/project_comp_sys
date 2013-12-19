@@ -32,6 +32,9 @@ BEAMLENGTH        equ 4
 
 TIMEBETWEENLEVELS equ 1000
 
+ENEMYSCORE	equ 3
+BULLETPENALTY	equ 1
+
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
 BEAMCOLOR       equ 34
@@ -57,8 +60,7 @@ endcounter	db 0
 beamInterval    db 0
 obstInterval	db 0
 drawCheck   db 0 ;checkt of er halve dingen getekend moeten worden of niet
-score 		db 0,0,0,0,0
-
+score 		dw 30
 tempTime 	dw 0
 time		dw 0
 
@@ -245,6 +247,7 @@ renderWorld PROC NEAR
       call 	drawBeam
       call  createObstacle
 	call	drawObstacles
+      call 	drawScore
 
 	
 	mov [endcounter], 0001b
@@ -960,6 +963,7 @@ calcPos:
       
       ;set the interval on 
       mov   [beamInterval], TIMEBETWEENBEAMS
+      sub   [score],BULLETPENALTY
       jmp   done
 
 decInterval:
@@ -994,6 +998,7 @@ checkNext:
       cmp al, BEAMCOLOR
       jne endCheckCollide
       mov   dx, 1 ; set delete on true
+      add   [score],ENEMYSCORE
       push obstacles[bx] ;push the x as parameter
       call searchBeamForX
       call deleteObstacle
@@ -1100,6 +1105,34 @@ resetTime:
    pop ax
    ret 0
  updateLevels ENDP
+
+drawScore PROC NEAR
+
+  push ax
+  push bx
+  push dx
+
+  mov bx,0
+
+@@:
+  move ax, [score]
+  div 10
+  push dx
+  push bx
+  call drawNumber
+  inc bx
+  cmp ax,0
+  je done
+  jmp @B
+
+done:
+  pop dx
+  pop bx
+  pop ax
+  ret 0
+
+drawScore ENDP
+
 
 ; _------------------------------- END OF CODE ---------------------------------
 END main
