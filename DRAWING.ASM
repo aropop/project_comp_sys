@@ -27,7 +27,7 @@ OBSTACLESPAWNX 	equ 319
 OBSTACLEW	equ 10
 TIMEBETWEENOBST  equ 10
 
-TIMEBETWEENBEAMS  equ 3
+TIMEBETWEENBEAMS  equ 3	
 BEAMLENGTH        equ 4
 
 PLAYERCOLOR 	equ 10
@@ -55,6 +55,7 @@ endcounter	db 0
 beamInterval    db 0
 obstInterval	db 0
 drawCheck   db 0 ;checkt of er halve dingen getekend moeten worden of niet
+score 		db 0,0,0,0,0
 
 tempTime 	dw 0
 time		dw 0
