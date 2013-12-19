@@ -20,7 +20,7 @@ PLAYERW		equ 10
 PLAYERSTARTY	equ 0
 PLAYERX		equ 12
 
-MAXOBSTACLES 	equ 5
+MAXOBSTACLES 	equ 25
 MAXBEAMS          equ 50
 
 OBSTACLESPAWNX 	equ 319
@@ -886,14 +886,26 @@ loopToEnd:
 rightindex:
 	call rand
       ;make sure not out of bounds
-      mov dx, SCREENH
+      and ax, 11111111b
+      sub ax, 54
+      cmp ax, 0 ; too small
+      jg @F
+      jmp rightindex
+@@:
+      ;too big
       push bx
+      push ax
       mov bx, [level]
-      sub dx, levelObst[bx]
-      sub dx, 1 ;margin
+      mov dx, levelObst[bx]      
+      mov ax, SCREENH
+      sub ax, dx
+      mov dx, ax
+      pop ax
       pop bx
-      and ax, dx
-      inc ax
+      cmp ax, dx
+      jg rightindex
+
+
 	mov obstacles[bx], OBSTACLESPAWNX
 	mov obstacles[bx + 2], ax	
 	jmp resetInterval
