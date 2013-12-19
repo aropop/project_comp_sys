@@ -20,7 +20,7 @@ PLAYERW		equ 10
 PLAYERSTARTY	equ 0
 PLAYERX		equ 12
 
-MAXOBSTACLES 	equ 25
+MAXOBSTACLES 	equ 5
 MAXBEAMS          equ 50
 
 OBSTACLESPAWNX 	equ 319
@@ -29,6 +29,8 @@ TIMEBETWEENOBST  equ 10
 
 TIMEBETWEENBEAMS  equ 3	
 BEAMLENGTH        equ 4
+
+TIMEBETWEENLEVELS equ 1000
 
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
@@ -855,24 +857,27 @@ goDown PROC NEAR
 goDown ENDP
 
 createObstacle PROC NEAR
+      push cx
+      push dx
 	push bx
 	push ax
 
 	mov bx, 0
 	cmp [obstInterval], 0
-        jne decInterval
+      jg decInterval
 
 loopToEnd:
 	mov ax, obstacles[bx]
 	cmp ax, 0
 	je rightindex
 	
-	mov ax, MAXOBSTACLES
-	shl ax, 1
-	cmp bx, ax
-	jge resetInterval ;no more place for new obstacles
-	add bx, 2
-	jmp loopToEnd
+      xor   ax,ax
+	mov   ax, MAXOBSTACLES
+	shl   ax, 1
+	cmp   bx, ax
+	jge   resetInterval ;no more place for new obstacles
+	add   bx, 2
+	jmp   loopToEnd
 
 
 rightindex:
@@ -882,17 +887,21 @@ rightindex:
       push bx
       mov bx, [level]
       sub dx, levelObst[bx]
-      sub dx, 5 ;margin
+      sub dx, 1 ;margin
       pop bx
       and ax, dx
-
+      inc ax
 	mov obstacles[bx], OBSTACLESPAWNX
-	add bx, 2
-	mov obstacles[bx], ax	
+	mov obstacles[bx + 2], ax	
 	jmp resetInterval
 
 decInterval:
-	dec [obstInterval]
+      mov   cx, [level]
+      shr   cx, 1
+@@:
+	sub [obstInterval], 1
+      js  done   
+      loop @B
 	jmp done
   
 resetInterval:
@@ -901,6 +910,8 @@ resetInterval:
 done:
 	pop ax
 	pop bx
+      pop dx
+      pop cx
 	ret 0
 createObstacle ENDP
 
@@ -1012,9 +1023,23 @@ beamLoop:
       jge   exitSearch
       
       mov   dx, beams[bx]
-      sub   dx, BEAMLENGTH - 4
+      sub   dx, BEAMLENGTH
       cmp   ax, dx
       je    beamFound
+      mov   cx, 5
+@@:
+      inc   dx
+      cmp   ax, dx
+      je    beamFound
+      loop  @B
+
+      mov   cx, 5
+      add   dx, 5
+@@:
+      dec   dx
+      cmp   ax, dx
+      je    beamFound
+      loop  @B
 
  
       add   bx, 4
@@ -1053,7 +1078,7 @@ updateTime PROC NEAR
    push ax
    push bx
    
-   mov ax, 100
+   mov ax, TIMEBETWEENLEVELS
    cmp [time], ax
    jl done
    cmp [levelmode], 0
