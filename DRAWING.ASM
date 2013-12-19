@@ -20,7 +20,7 @@ PLAYERW		equ 10
 PLAYERSTARTY	equ 0
 PLAYERX		equ 12
 
-MAXOBSTACLES 	equ 25
+MAXOBSTACLES 	equ 5
 MAXBEAMS          equ 50
 
 OBSTACLESPAWNX 	equ 319
@@ -29,6 +29,8 @@ TIMEBETWEENOBST  equ 10
 
 TIMEBETWEENBEAMS  equ 3
 BEAMLENGTH        equ 4
+
+TIMEBETWEENLEVELS equ 1000
 
 PLAYERCOLOR 	equ 10
 OBSTACLECOLOR	equ 60
@@ -868,12 +870,13 @@ loopToEnd:
 	cmp ax, 0
 	je rightindex
 	
-	mov ax, MAXOBSTACLES
-	shl ax, 1
-	cmp bx, ax
-	jge resetInterval ;no more place for new obstacles
-	add bx, 2
-	jmp loopToEnd
+      xor   ax,ax
+	mov   ax, MAXOBSTACLES
+	shl   ax, 1
+	cmp   bx, ax
+	jge   resetInterval ;no more place for new obstacles
+	add   bx, 2
+	jmp   loopToEnd
 
 
 rightindex:
@@ -883,13 +886,12 @@ rightindex:
       push bx
       mov bx, [level]
       sub dx, levelObst[bx]
-      sub dx, 5 ;margin
+      sub dx, 1 ;margin
       pop bx
       and ax, dx
-
+      inc ax
 	mov obstacles[bx], OBSTACLESPAWNX
-	add bx, 2
-	mov obstacles[bx], ax	
+	mov obstacles[bx + 2], ax	
 	jmp resetInterval
 
 decInterval:
@@ -1075,7 +1077,7 @@ updateTime PROC NEAR
    push ax
    push bx
    
-   mov ax, 100
+   mov ax, TIMEBETWEENLEVELS
    cmp [time], ax
    jl done
    cmp [levelmode], 0
