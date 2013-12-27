@@ -34,9 +34,10 @@ BEAMLENGTH        equ 4
 TIMEBETWEENLEVELS equ 1000
 
 ENEMYSCORE	equ 3
-BULLETPENALTY	equ 1
+BULLETPENALTY	equ -1
 
-SCORE_PLACE       equ 3004
+SCORE_PLACE       equ 2900
+SCORE_MARGIN      equ 10
 OBSTACLECOLOR	equ 60
 BEAMCOLOR       equ 34
 ENDCOLOR	equ 64
@@ -61,7 +62,7 @@ endcounter	db 0
 beamInterval    db 0
 obstInterval	db 0
 drawCheck   db 0 ;checkt of er halve dingen getekend moeten worden of niet
-score 		dw 30
+score 		dw 29
 tempTime 	dw 0
 time		dw 0
 
@@ -102,14 +103,15 @@ main PROC NEAR
 	mov	[position], PLAYERSTARTY ;ax bevat de y coordinaat van de 
 
 @main_loop:	
-      call createBeam
+      ;Check if player is dead
+      ;call createBeam
 	push ax ;preserve
 	xor ax, ax
 	mov ah, [dead]
 	cmp ax, 0
 	pop ax ;restore
-	jne donotupdate
-	call	updateWorld	; this would contain the game code (like AI)
+	jne donotupdate ;do not update the world
+	call	updateWorld	
 donotupdate:
 	call	renderWorld	; draws the world
 
@@ -207,25 +209,17 @@ updateScreen PROC NEAR
 	ret		0
 updateScreen ENDP
 
-;Takes y coordinate of our plane
 renderWorld PROC NEAR
 	
 	call	clearScreenBuffer
 
-	; draw a random rectangle
-	;call	rand
-	;and		ax, 0ffh
-	;push	ax
-	;call	rand
-	;and		ax, 07fh
-	;push	ax
+      ;Check if player is dead
 	xor 	ax, ax
 	mov 	al, [endcounter]
 	and	al, [dead]
-	cmp 	ax, 00000000b
-	jne	drawEndLabel	
+	cmp 	ax, 00000000b ;Flash red once, then draw the situation how the player died, then repeat
+	jne	drawEndLabel ;end drawing (red screen)
 
-	;call 	drawTriangle
       call  drawPlayer	
       call 	drawBeam
       call  createObstacle
@@ -233,10 +227,10 @@ renderWorld PROC NEAR
       call 	drawScore
 
 	
-	mov [endcounter], 0001b
+	mov [endcounter], 0001b ;switch between red flash and end situation
 	jmp dontDrawEnd
 
-drawEndLabel:
+drawEndLabel: ;draw red screen
 	call 	drawEnd
 	mov [endcounter], 0000b
 
@@ -248,6 +242,7 @@ dontDrawEnd:
 	ret	0
 renderWorld ENDP
 
+;Updates the elements in the world
 updateWorld PROC NEAR
 
 	call updateObstacles
@@ -258,6 +253,7 @@ updateWorld PROC NEAR
 	ret 0
 updateWorld ENDP
 
+;Updates the obstacles (places them closer to the player and deletes when they aren't relevant any more)
 updateObstacles PROC NEAR
 	
 	push ax
@@ -301,7 +297,8 @@ endUpdateObstacles:
 	ret 0
 updateObstacles ENDP
 
-
+;Deletes an obstacle
+;Takes the obstacle counter in bx
 deleteObstacle PROC NEAR
       push ax
       push dx
@@ -343,7 +340,7 @@ endDeleteObstacle:
       ret 0
 deleteObstacle ENDP
 
-
+;Updates the placement of the beams
 updateBeams PROC NEAR
 	
 	push ax
@@ -391,7 +388,9 @@ endUpdateBeams:
 
 	ret 0
 updateBeams ENDP
-;procedure verwacht in bx een counter voor de beam
+
+;Deletes the beam from the screen
+;Takes in bx the beam counter
 deleteBeam PROC NEAR
       push ax
       push dx
@@ -817,11 +816,13 @@ drawNumber PROC NEAR
       push dx
       push cx
 
+      mov ax, [bp + 4][0] ;offset
+      mov dx, SCORE_MARGIN
+      mul dx
+      mov dx, SCORE_PLACE
+      sub dx, ax
+      xor ax, ax
       mov ax, [bp + 4][2] ;number to print
-      mov dx, [bp + 4][0] ;offset
-      mov cx, SCORE_PLACE
-      sub cx, dx
-      mov dx, cx
 
       cmp ax, 0
       jne @F
@@ -895,7 +896,7 @@ drawNumber PROC NEAR
       call drawArray
       jmp endDrawNumber
 @@:
-      cmp ax, 4
+      cmp ax, 9
       jne endDrawNumber
       mov ax, offset nine_num
       push ax
@@ -1027,6 +1028,10 @@ createBeam PROC NEAR
 	xor ax, ax
 	xor bx, bx ;set bx to begin beams-array
 
+      ;test if score is not null
+      cmp [score], 0
+      jle done
+
       ;test if the interval is nul so that we don't create to much beams
       cmp [beamInterval], 0
       jne decInterval
@@ -1061,9 +1066,8 @@ calcPos:
       
       ;set the interval on 
       mov   [beamInterval], TIMEBETWEENBEAMS
-      mov   ax, [score]
-      sub   ax,BULLETPENALTY
-      mov   [score], ax
+      mov   ax, BULLETPENALTY
+      call  updateScore
       jmp   done
 
 decInterval:
@@ -1098,7 +1102,14 @@ checkNext:
       cmp al, BEAMCOLOR
       jne endCheckCollide
       mov   dx, 1 ; set delete on true
-      add   [score],ENEMYSCORE
+      
+      ;udpate score
+      push ax
+      mov  ax, ENEMYSCORE
+      call updateScore
+      pop ax
+
+      ;delete beam
       push obstacles[bx] ;push the x as parameter
       call searchBeamForX
       call deleteObstacle
@@ -1217,6 +1228,7 @@ drawScore PROC NEAR
 
   mov ax, [score]
 @@:
+  mov dx, 0
   mov cx, 10
   div cx
   push dx
@@ -1236,6 +1248,28 @@ done:
 
 drawScore ENDP
 
+;increases or decrease the score
+;takes the amount to increase or decrease in ax
+updateScore PROC NEAR
+      push dx
+
+      cmp ax, 0
+      jns @F ;when adding there is no problem
+      mov dx, [score] ;check if the score is not below zero
+      cmp dx, 0
+      jle noScoreUpdate
+@@:     
+      add [score], ax
+      mov ax, [score]
+      cmp [score], 0
+      jge noScoreUpdate
+      
+      mov [score], 0
+ 
+noScoreUpdate:
+     pop dx
+      ret 0
+updateScore ENDP
 
 ; _------------------------------- END OF CODE ---------------------------------
 END main
