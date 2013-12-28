@@ -3,13 +3,12 @@ Asteroid Field
 
 Voorwoord:
 
-Dit spel is gemaakt als project voor het vak Computerwetenschappen. 
-Het project had als opdracht een spel te maken of een fotobewerkingsprogramma.
+Dit spel is gemaakt als project voor het vak Computersystemen. 
+Het project had als opdracht een spel te maken of een decoder voor een bepaalde encodering.
 Het spel had meteen de aandacht en we begonnen na te denken over welke klassieker we zouden maken tijdens ons project.
-Aangezien onze kennis van assembly niet al te groot was bij aanvang van het project, beseften we dat het spel in een 2D-omgeving gespeeld zou worden. 
+Aangezien onze kennis van (masm) assembly niet al te groot was bij aanvang van het project, beseften we dat het spel in een 2D-omgeving gespeeld zou worden. 
 Space-invader was aanlokkelijk, maar niet origineel dus kregen we het idee om een avatar tegenkomende obstakels te laten ontwijken en de dit object de kans te geven om deze obstakels uit te schakelen door op hen te schieten.
-We hadden al eerder spelen gezien die zo een mechanisme gebruikte en het trok ons wel aan.
-En zo gebeurde het, Asteroid Field was gecreëerd.
+We hadden al eerder spellen gezien met een gelijkaardig thema en het trok ons wel aan. Dus maakten we het spel Asteroid Field.
 
 Het spel:
 
@@ -18,7 +17,7 @@ Een asteroide wordt nooit op dezelfde plaats gecreëerd waardoor het spel telken
 Om het niet eentonig en simpel te houden, zijn er levels geïmplementeerd die na een bepaalde tijd verhogen.
 Dus hoe langer de ruimtesonde kan overleven in het asteroideveld, hoe moeilijker de levels worden.
 De score staat los van de levels, maar is wel aan een ander, minder logisch, aspect van het spel gekoppeld.
-Elke punt dat je scoort is goed voor één kogel dat je kan afvuren.
+Elk punt dat je scoort is goed voor één kogel dat je kan afvuren.
 Wanneer de score op nul staat, is het enigste wat je kan doen de asteroiden vingervlug ontwijken en hopen dat je toch toevallig een asteroide hebt geraakt met een verdwaalde kogel.
 Voor elke asteroide dat geraakt kan worden met een kogel, worden er drie punten bij de totaalscore geteld en voor elke kogel dat afgevuurd wordt, trekt het spel één punt van de totaalscore af.
 Wie een hoge score wil, kan dus beter al zijn kogels goed gebruiken.
