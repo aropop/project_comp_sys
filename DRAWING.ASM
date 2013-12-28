@@ -36,6 +36,8 @@ TIMEBETWEENLEVELS equ 1000
 ENEMYSCORE	equ 3
 BULLETPENALTY	equ -1
 
+MIDDLE            equ 4300
+
 SCORE_PLACE       equ 2950
 SCORE_MARGIN      equ 10
 OBSTACLECOLOR	equ 60
@@ -104,7 +106,6 @@ main PROC NEAR
 
 @main_loop:	
       ;Check if player is dead
-      ;call createBeam
 	push ax ;preserve
 	xor ax, ax
 	mov ah, [dead]
@@ -225,7 +226,8 @@ renderWorld PROC NEAR
       call  createObstacle
 	call	drawObstacles
       call 	drawScore
-
+      
+      call drawBegin
 	
 	mov [endcounter], 0001b ;switch between red flash and end situation
 	jmp dontDrawEnd
@@ -807,6 +809,25 @@ drawEnd PROC NEAR
 	
 	ret 0
 drawEnd ENDP
+
+drawBegin PROC NEAR
+      push ax
+
+      mov ax, offset asteroid_field
+      push ax
+      mov ax, MIDDLE
+      push ax
+      call drawArray
+      
+      mov ax, offset asteroid_field2
+      push ax
+      mov ax, MIDDLE + 32
+      push ax
+      call drawArray
+
+      pop ax      
+      ret 0
+drawBegin ENDP
 
 drawNumber PROC NEAR
 	push bp
