@@ -25,24 +25,23 @@ MAXOBSTACLES 	equ 25
 MAXBEAMS          equ 50
 
 OBSTACLESPAWNX 	equ 319
-OBSTACLEW	equ 10
-TIMEBETWEENOBST  equ 10
+OBSTACLEW	      equ 10
+TIMEBETWEENOBST   equ 10
 
 TIMEBETWEENBEAMS  equ 3	
 BEAMLENGTH        equ 4
 
 TIMEBETWEENLEVELS equ 1000
 
-ENEMYSCORE	equ 3
+ENEMYSCORE	      equ 3
 BULLETPENALTY	equ -1
 
-MIDDLE            equ 4300
 
 SCORE_PLACE       equ 2950
 SCORE_MARGIN      equ 10
 OBSTACLECOLOR	equ 60
-BEAMCOLOR       equ 34
-ENDCOLOR	equ 64
+BEAMCOLOR         equ 34
+ENDCOLOR	      equ 64
 
 AMOUNTPIXELS	equ 64000
 
@@ -50,30 +49,29 @@ AMOUNTPIXELS	equ 64000
 .DATA        ; data segment, variables
 oldVideoMode	db ?
 
-hardOffset	dw 0 ; test variable
-position	dw 0
-positionBeam	dw 0
-obstacles	dw 50 dup(0) ;affwisselde x,y van een obstacle
-beams           dw 100 dup(0)
-level    	dw 2
-levelmode	dw 0
-levelspeed	dw 1;snelheid waarmee de obstacles bewegen
-levelObst	dw 15,13,10,7,5,3,0
-dead		db 0 ;bepaald of je dood bent
-endcounter	db 0
-beamInterval    db 0
-obstInterval	db 0
-drawCheck   db 0 ;checkt of er halve dingen getekend moeten worden of niet
-score 		dw 29
-tempTime 	dw 0
-time		dw 0
+position	      dw 0 ;Y position of the player
+obstacles	      dw 50 dup(0) ;X,Y of the obstacles
+beams             dw 100 dup(0) ; X,Y of the beams
+level    	      dw 2 ;current level
+levelmode	      dw 0 ;
+levelspeed	      dw 1 ;speed of the obstacles
+levelObst	      dw 15,13,10,7,5,3,0 ;size of the obstacles
+dead		      db 0 ;bepaald of je dood bent
+endcounter	      db 0 ;counter to make it flash
+beamInterval      db 0 ;interval between 2 beams
+obstInterval	db 0 ;interval between 2 obstacles
+drawCheck         db 0 ;checkt of er halve dingen getekend moeten worden of niet
+score 		dw 29;Score of the player
+tempTime 	      dw 0 ;time counters
+time		      dw 0 ;time counters (2 because of the speed of each loop)
+started           db 0 ;determines wheter we started the game already
 
 
 
 ; --- SCREEN BUFFER ------------------------------------------------------------
 .FARDATA?	; segment that contains the screenBuffer for mode 13h drawing
 palette			db 768 dup(0)
-screenBuffer	db 64000 dup(?)	; the 64000 bytes for the screen
+screenBuffer	      db 64000 dup(?)	; the 64000 bytes for the screen
 
 ; --- CODE SEGMENT -------------------------------------------------------------
 .CODE        ; code segment
@@ -97,37 +95,49 @@ main PROC NEAR
 	call 	updateScreen
 	
 	; set mode 13h
-	mov		ax, 13h
+	mov	ax, 13h
 	push	ax
 	call	setVideoMode
-	mov		[oldVideoMode], al
-	;initialiseer de positie van het mannetje	
-	mov	[position], PLAYERSTARTY ;ax bevat de y coordinaat van de 
+	mov	[oldVideoMode], al
 
+	;initialize the position of the player
+	mov	[position], PLAYERSTARTY 
+
+;start main loop
 @main_loop:	
+
+      ;Check if we are started yet
+      cmp [started], 0
+      je  notStarted
+
       ;Check if player is dead
 	push ax ;preserve
 	xor ax, ax
 	mov ah, [dead]
 	cmp ax, 0
 	pop ax ;restore
-	jne donotupdate ;do not update the world
+	jne donotupdate ;do not update the world (because we are dead)
 	call	updateWorld	
-donotupdate:
-	call	renderWorld	; draws the world
 
+donotupdate: ;render the world
+	call	renderWorld	; draws the world
+      jmp   handleOnlyInput ;Jump over the beginning commands
+
+notStarted: ;draw the begin screen
+      call  drawBegin
+
+handleOnlyInput: ;handle the input
 	call	handleInput	; handle user input
 
-
-	cmp		al, 0
-	jz		@main_loop
+	cmp	al, 0 ;as long esc is not pressed we continue
+	jz	@main_loop
 	
 	; Restore original keyboard handler
 	call	uninstallKeyboardHandler
 
 	; Restore original video mode
-	mov		al, [oldVideoMode]
-	xor		ah, ah
+	mov	al, [oldVideoMode]
+	xor	ah, ah
 	push	ax
 	call	setVideoMode
 	
@@ -155,7 +165,7 @@ fadeToBlack PROC NEAR
 	ret 0
 fadeToBlack ENDP
 
-; Clears the screen buffer to color 0
+; Clears the screen buffer to color 0 (black)
 clearScreenBuffer PROC NEAR
 	push	ax
 	push	cx
@@ -210,6 +220,7 @@ updateScreen PROC NEAR
 	ret		0
 updateScreen ENDP
 
+;handles all the draw functions except the begin draw
 renderWorld PROC NEAR
 	
 	call	clearScreenBuffer
@@ -227,7 +238,6 @@ renderWorld PROC NEAR
 	call	drawObstacles
       call 	drawScore
       
-      call drawBegin
 	
 	mov [endcounter], 0001b ;switch between red flash and end situation
 	jmp dontDrawEnd
@@ -472,11 +482,6 @@ handleInput PROC NEAR
 	jz @F	; jump next
 	call	goDown	
 
-@@:
-	mov	al, es:[__keyboardState][SCANCODE_LEFT]	; test LEFT key
-	cmp	al, 0
-	jz @F	; jump next
-	; call some function to handle this key
 
 @@:
 	mov	al, es:[__keyboardState][SCANCODE_RIGHT]	; test RIGHT key
@@ -484,6 +489,12 @@ handleInput PROC NEAR
 	jz @F	; jump next
 	; call some function to handle this key
 	call	createBeam
+@@:
+
+      mov   al, es:[__keyboardState][SCANCODE_ENTER]
+      cmp   al, 0
+      jz    @F
+      mov   [started], 1
 @@:
 testesc:	
 	; finally, let's put the ESC key status as return value in AX
@@ -786,6 +797,7 @@ done:
 	
 drawBeam ENDP
 
+;Draws a full red screen
 drawEnd PROC NEAR
 	push es
 	push ax
@@ -810,25 +822,37 @@ drawEnd PROC NEAR
 	ret 0
 drawEnd ENDP
 
+;Draws the beginning UI
 drawBegin PROC NEAR
       push ax
-
+      
+      ;first half of the text
       mov ax, offset asteroid_field
       push ax
       mov ax, MIDDLE
       push ax
       call drawArray
-      
+      ;second half
       mov ax, offset asteroid_field2
       push ax
       mov ax, MIDDLE + 32
       push ax
       call drawArray
 
+      ;press enter text
+      mov ax, offset press_enter
+      push ax
+      mov ax, PRESS_ENTER_PLACE
+      push ax
+      call drawArray
+      ;We need to call this since we are not in the renderWorld procedure
+      call 	updateScreen
+
       pop ax      
       ret 0
 drawBegin ENDP
 
+;draws a certain number
 drawNumber PROC NEAR
 	push bp
 	mov bp, sp
