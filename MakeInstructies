@@ -1,0 +1,12 @@
+Make Instructies
+
+Vereisten:
+- Masm 8086 compiler
+- nmake 
+
+Instructies:
+1. Plaats alle bestanden in de map /src/ op de harde schijf van je dosbox of dos systeem.
+2. Ga naar de directory in dosbox of op het dossysteem met behulp van het cd commando
+3. Voer het nmake commando uit (om te debuggen voor nmake cv uit)
+4. Voer GAME.EXE uit
+
