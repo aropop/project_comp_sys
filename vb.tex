@@ -1,0 +1,116 @@
+% !TeX spellcheck = nl_NL
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{listings}
+\title{Project ComputerSystemen}
+\author{Arno De Witte \\Wout Van Riel  \\Email: \href{mailto:Arno.De.Witte@vub.ac.be}{Arno.De.Witte@vub.ac.be} \\ \href{mailto:Wout.Van.Riel@vub.ac.be}{Wout.Van.Riel@vub.ac.be} \\
+Vrije Universiteit Brussel}
+\date{6 januari 2014}
+\begin{document}
+\maketitle
+\newpage
+\tableofcontents
+\newpage
+
+\section{vanachter staan no vben}
+
+
+\section{Voorwoord}
+Dit spel is gemaakt als project voor het vak Computersystemen. %commentaar
+Het project had als opdracht een spel te maken of een decoder voor een bepaalde encodering.
+Het spel had meteen de aandacht en we begonnen na te denken over welke klassieker we zouden maken tijdens ons project.
+Aangezien onze kennis van (masm) assembly niet al te groot was bij aanvang van het project, beseften we dat het spel in een 2D-omgeving gespeeld zou worden.
+Space-invader was aanlokkelijk, maar niet origineel dus kregen we het idee om een avatar tegenkomende obstakels te laten ontwijken en de dit object de kans te geven om deze obstakels uit te schakelen door op hen te schieten.
+We hadden al eerder spellen gezien met een gelijkaardig thema en het trok ons wel aan. Dus maakten we het spel Asteroid Field.
+
+\section{Het spel}\label{spel}
+
+Het concept van het spel is eenvoudig: probeer niet geraakt te worden door de asteroiden die naar de ruimtesonde komen.
+Een asteroide wordt nooit op dezelfde plaats gecreëerd waardoor het spel telkens een andere ervaring is.
+Om het niet eentonig en simpel te houden, zijn er levels geïmplementeerd die na een bepaalde tijd verhogen.
+Dus hoe langer de ruimtesonde kan overleven in het asteroideveld, hoe moeilijker de levels worden.
+De score staat los van de levels, maar is wel aan een ander, minder logisch, aspect van het spel gekoppeld.
+Elk punt dat je scoort is goed voor één kogel dat je kan afvuren.
+Wanneer de score op nul staat, is het enigste wat je kan doen de asteroiden vingervlug ontwijken en hopen dat je toch toevallig een asteroide hebt geraakt met een verdwaalde kogel.
+Voor elke asteroide dat geraakt kan worden met een kogel, worden er drie punten bij de totaalscore geteld en voor elke kogel dat afgevuurd wordt, trekt het spel één punt van de totaalscore af.
+Wie een hoge score wil, kan dus beter al zijn kogels goed gebruiken.
+Wanneer je geraakt wordt, zal het scherm rood flitsen, zodat je kan zien hoe je geraakt bent.
+
+\section{Besturing}
+
+Het spel heeft maar drie toetsen nodig om gespeeld te worden. Namelijk de drie pijltjes: omhoog, omlaag en rechts.
+Om het schip omhoog te laten gaan, moet de omhoogpijl van het toetsenbord ingedrukt worden.
+Om het schip omlaag te laten gaan, moet de omlaagpijl van het toetstenbord ingedrukt worden.
+Om een kogel af te vuren, moet de rechts-pijl ingedrukt worden.
+Voor je begint wordt je begroet met een start scherm. Je kan het spel dan starten met de enter toets. 
+Je kan het spel op elk moment verlaten met de escape toets. Je komt dan terug op de commando lijn van dosbox.
+
+\section{Code}
+De code is opgedeelt in een aantal bestanden: Game, drawp, sprites, keyb, rand en video. Elk bestand heeft een MASM broncode bestand (.asm) en een include bestand (.inc).
+Voor dit project hebben we ons gebasseerd op het gegeven code voorbeeld op pointcarré. Dit wil zeggen dat we de game-loop, keyboard handling en video procedures hebben overgenomen. 
+Dit was een goede basis vermits we niet meer zelf in het "lager" gelegen werk (zoals de interupts) moesten duiken en ons konden focussen op de code die belangrijk was voor het spel zelf.
+
+\subsection{GAME.ASM}
+In dit bestand bevinden zich alle data die belangrijk is voor het lopen van het spel zelf. Je vindt er bijvoorbeeld de array met obstakels en de array met beams.
+Het bevat ook de main procedure die wordt opgeroepen wanneer het spel wordt uitegevoerd. Hierin bevindt zich dan ook de main loop. Deze stelt 1 cyclus van het spel voor.
+Zolang er niet op escape wordt gedrukt is dit een oneindige lus. Voor de lus wordt alles geïnitialiseerd. Tijdens de lus worden de 2 belangrijkste procedures opgeroepen: renderWorld en updateWorld. 
+Verder wordt er ook nog gechecked of de speler niet dood is want dan moet er niet meer worden geupdated.
+RenderWorld gaat alle elementen ven het spel tekenen, terwijl updateWorld ervoor zorgt dat alle posities worden bijgewerkt. 
+
+nieuwelijn = \\
+
+lijst 
+\begin{description}
+ \item[Menu] Een menu waarin verschillende opties kunnen gekozen worden.\ref{Menu}
+ \item[Opties] Een item in het menu waarin je via de pijltjes verschillende opties over het spel kan aanpassen. Deze aanpassingen zijn permanent.\ref{Menu}
+ \item[High-scores] Een ander item in het menu. Hierin zie wie welke high-score heeft behaalt. Deze blijft permanent (verdwijnt dus niet wanneer je het spel afsluit).\ref{Menu}\ref{File-handler}
+ \item[Obstakels] Verschillende soorten obstakels die op verschillende hoogtes bevinden, met verschillende afmetingen en kleuren.\ref{Obstacle}
+ \item[Power-ups] Verschillende power-ups met verschillende effecten.\ref{Power-up}
+ \item[Botsingen] Botsingen met de power-ups (ze oprapen) en obstakels (doodgaan).
+ \item[Springen Glijden] Glijden over de grond om hogere obstakels te ontwijken. Springen om lage obstakels te ontwijken.
+ \item[Topbar] Een topbar met verschillende informatie zoals de level, huidige high-score, punten, speeltijd en het gewicht van het mannetje.\ref{Top-bar}
+ \item[Stroom van objecten] Een oneindige stroom van objecten, de hoeveelheid en onderlinge afstand afhankelijk van het level.\ref{Generator}
+ \item[Levels] Levels die afhankelijk zijn van de gespeelde tijd. \ref{Top-bar}
+ \item[Gewicht] Het gewicht van het karakter dat een invloed heeft op de snelheid van de obstakels en power-ups. Maar ook op de gravitatie en de verticale snelheid zodat het spel zich aanpast de nieuwe waarden.\ref{Avatar}\ref{Physics-engine}
+ \item[Hulptekstjes] Teksten die je helpen met het spel. Ze geven informatie over bijvoorbeeld power-ups of de bediening van het spel.\ref{hulp}
+ \item[Animaties] Een loop animatie waardoor het lijkt dat het karakter effectief loopt.\ref{UI}
+ \item[Pauze] Een manier om het spel te pauzeren door op p te drukken in het spel.\ref{Gameloop}
+ \item[Eindmenu] Een menu op het einde van het spel. Je kan hier nog steeds je punten en de rest van de topbar zien. \ref{Menu}
+ 
+\end{description}
+
+tabel\\
+\begin{tabular}{| p{3cm} | p{9cm} |}
+\hline
+{\bf Naam} & {\bf Functie} \\ \hline
+Avatar\ref{Avatar} & Bevat alle eigenschappen van het mannetje dat loopt \\ \hline
+Obstacle\ref{Obstacle} & Alle obstakels die het mannetje tegenkomt \\ \hline
+Power-up\ref{Power-up} & De power-ups die vanaf een bepaalde level in het spel zitten \\ \hline
+\textit{ADT-procedures}\ref{hulp} & Allerhande ADT's die door verschillende andere objecten gebruikt worden \\ \hline
+\textit{Default-values} & Een bestand waarin allerlei waarden staan, dit om het aanpassen ervan te vergemakkelijken \\ \hline
+Menu\ref{Menu} & De menu's en optie menu's van het spel \\ \hline
+UI\ref{UI} & Dit tekent alles op het scherm \\ \hline
+File-handler\ref{File-handler} & Behandelt alle handelingen met files \\ \hline
+Event-recorder\ref{Event-recorder} & Deze handelt alle de speler zijn inputs\\ \hline
+Physics\ref{Physics-engine} & Dit object berekent alle snelheden en posities aan de hand van deze snelheden \\ \hline
+Generator\ref{Generator} & Houdt zich bezig met het generen van nieuwe obstakels en power-ups \\ \hline
+Topbar\ref{Top-bar} & Bevat alle informatie over het spel \\ \hline
+Gameloop\ref{Gameloop} & Controleert en voert het spel uit \\ \hline
+\end{tabular}
+
+\textbf{bolt!}\\
+\ref{spel} referentie
+install via (ja das 200 mb)\\
+\begin{lstlisting}
+sudo apt-get install texlive
+\end{lstlisting}
+naar pdf via
+\\
+\begin{lstlisting}
+pdflatex vb.tex
+\end{lstlisting}
+en dan door alle fouten springen\\
+als ge een fout vind gewoon 
+
+\end{document}
