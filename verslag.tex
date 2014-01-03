@@ -26,27 +26,26 @@ We hadden al eerder spellen gezien met een gelijkaardig thema en het trok ons we
 
 Het concept van het spel is eenvoudig: probeer niet geraakt te worden door de asteroiden die naar de ruimtesonde komen.
 Een asteroide wordt nooit op dezelfde plaats gecreëerd waardoor het spel telkens een andere ervaring is.
-Om het niet eentonig en simpel te houden, zijn er levels geïmplementeerd die na een bepaalde tijd verhogen.
+Om het niet eentonig en simpel te houden, zijn er levels ge\"implementeerd die na een bepaalde tijd verhogen.
 Dus hoe langer de ruimtesonde kan overleven in het asteroideveld, hoe moeilijker de levels worden.
 De score staat los van de levels, maar is wel aan een ander, minder logisch, aspect van het spel gekoppeld.
-Elk punt dat je scoort is goed voor één kogel dat je kan afvuren.
+Elk punt dat je scoort is goed voor \'e\'en kogel dat je kan afvuren.
 Wanneer de score op nul staat, is het enigste wat je kan doen de asteroiden vingervlug ontwijken en hopen dat je toch toevallig een asteroide hebt geraakt met een verdwaalde kogel.
-Voor elke asteroide dat geraakt kan worden met een kogel, worden er drie punten bij de totaalscore geteld en voor elke kogel dat afgevuurd wordt, trekt het spel één punt van de totaalscore af.
+Voor elke asteroide dat geraakt kan worden met een kogel, worden er drie punten bij de totaalscore geteld en voor elke kogel dat afgevuurd wordt, trekt het spel \'e\'en punt van de totaalscore af.
 Wie een hoge score wil, kan dus beter al zijn kogels goed gebruiken.
-Wanneer je geraakt wordt, zal het scherm rood flitsen, zodat je kan zien hoe je geraakt bent.
+Wanneer je geraakt wordt, zal het scherm rood flitsen.
 
 \section{Besturing}
 
 Het spel heeft maar drie toetsen nodig om gespeeld te worden. Namelijk de drie pijltjes: omhoog, omlaag en rechts.
 Om het schip omhoog te laten gaan, moet de omhoogpijl van het toetsenbord ingedrukt worden.
-Om het schip omlaag te laten gaan, moet de omlaagpijl van het toetstenbord ingedrukt worden.
 Om een kogel af te vuren, moet de rechts-pijl ingedrukt worden.
 Voor je begint wordt je begroet met een start scherm. Je kan het spel dan starten met de enter toets. 
 Je kan het spel op elk moment verlaten met de escape toets. Je komt dan terug op de commando lijn van dosbox.
 
 \section{Code}
 De code is opgedeelt in een aantal bestanden: Game\ref{game_asm}, drawp, sprites, keyb, rand en video. Elk bestand heeft een MASM broncode bestand (.asm) en een include bestand (.inc).
-Voor dit project hebben we ons gebasseerd op het gegeven code voorbeeld op pointcarré. Dit wil zeggen dat we de game-loop, keyboard handling en video procedures hebben overgenomen. 
+Voor dit project hebben we ons gebasseerd op het gegeven code voorbeeld op pointcarr\'e. Dit wil zeggen dat we de game-loop, keyboard handling en video procedures hebben overgenomen. 
 Dit was een goede basis vermits we niet meer zelf in het "lager" gelegen werk (zoals de interupts) moesten duiken en ons konden focussen op de code die belangrijk was voor het spel zelf.
 
 \subsection{GAME.ASM}\label{game_asm}
@@ -55,6 +54,12 @@ Het bevat ook de main procedure die wordt opgeroepen wanneer het spel wordt uite
 Zolang er niet op escape wordt gedrukt is dit een oneindige lus. Voor de lus wordt alles geïnitialiseerd. Tijdens de lus worden de 2 belangrijkste procedures opgeroepen: renderWorld en updateWorld. 
 Verder wordt er ook nog gechecked of de speler niet dood is want dan moet er niet meer worden geupdated.
 RenderWorld gaat alle elementen ven het spel tekenen, terwijl updateWorld ervoor zorgt dat alle posities worden bijgewerkt. 
+
+
+\section{Problemen tijdens het programmeren}
+\begin {itemize}
+\item Obstakels werden gedeeltelijk bovenaan en gedeeltelijk onderaan getekend waardoor de avatar een botsing waarneemde waneer er geen was.
+\end {itemize}
 
 
 \end{document}
