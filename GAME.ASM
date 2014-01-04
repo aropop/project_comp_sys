@@ -52,7 +52,15 @@ main PROC NEAR
 	
 	; Install our own keyboard handler
 	call	installKeyboardHandler
+      
 
+	; memorize the old video mode
+	mov	ax, 13h
+	push	ax
+	call	setVideoMode
+	mov	[oldVideoMode], al
+
+@reset:
 	; fade to black
 	call	fadeToBlack
 	
@@ -61,12 +69,14 @@ main PROC NEAR
 
 	; draw the screen buffer
 	call 	updateScreen
+
+      ;clear data registers for when we are resetting
+      call  clearData
 	
 	; set mode 13h
 	mov	ax, 13h
 	push	ax
 	call	setVideoMode
-	mov	[oldVideoMode], al
 
 	;initialize the position of the player
 	mov	[position], PLAYERSTARTY 
@@ -89,6 +99,8 @@ main PROC NEAR
 
 donotupdate: ;render the world
 	call	renderWorld	; draws the world
+      cmp   [endcounter], 111111b
+      je    @reset
       jmp   handleOnlyInput ;Jump over the beginning commands
 
 notStarted: ;draw the begin screen
@@ -132,6 +144,46 @@ fadeToBlack PROC NEAR
 	pop	ax
 	ret 0
 fadeToBlack ENDP
+
+;Clears all the data for a reset
+clearData PROC NEAR
+      push  bx
+      push  cx
+
+      xor   bx, bx
+      mov   cx, MAXOBSTACLES 
+@@:
+      mov   [obstacles][bx], 0
+      mov   [obstacles][bx + 2], 0
+      add   bx, 4
+      loop  @B
+
+      xor   bx, bx
+      mov   cx, MAXBEAMS 
+@@:
+      mov   [beams][bx], 0
+      mov   [beams][bx + 2], 0
+      add   bx, 4
+      loop  @B
+
+      mov   [position], PLAYERX
+      mov   [level], 2
+      mov   [levelmode], 0
+      mov   [levelspeed], 1
+      mov   [dead], 0
+      mov   [endcounter], 0
+      mov   [beamInterval], 0
+      mov   [obstInterval], 0
+      mov   [drawCheck], 0
+      mov   [score], 29
+      mov   [tempTime], 0
+      mov   [time], 0
+      mov   [started], 0
+
+      pop   cx
+      pop   bx
+      ret 0
+clearData ENDP
 
 ; Clears the screen buffer to color 0 (black)
 clearScreenBuffer PROC NEAR
@@ -196,9 +248,9 @@ renderWorld PROC NEAR
       ;Check if player is dead
 	xor 	ax, ax
 	mov 	al, [endcounter]
-	and	al, [dead]
-	cmp 	ax, 00000000b ;Flash red once, then draw the situation how the player died, then repeat
-	jne	drawEndLabel ;end drawing (red screen)
+	and	al, [dead] ;can only be 0001 or 0000
+	cmp 	al, 0001b ;Flash red once, then draw the situation how the player died, then repeat
+	je	drawEndLabel ;end drawing (red screen)
 
       call  drawPlayer	
       call 	drawBeam
@@ -206,13 +258,15 @@ renderWorld PROC NEAR
 	call	drawObstacles
       call 	drawScore
       
+      cmp   [dead], 0
+      je   dontDrawEnd
+      inc   [endcounter]
 	
-	mov [endcounter], 0001b ;switch between red flash and end situation
 	jmp dontDrawEnd
 
 drawEndLabel: ;draw red screen
 	call 	drawEnd
-	mov [endcounter], 0000b
+	inc [endcounter]
 
 dontDrawEnd:
 
@@ -657,7 +711,7 @@ checkCollide PROC FAR
       mov al, es:[di]
       cmp al, PLAYERCOLOR
       jne checkNext
-      mov [dead], 0001b
+      mov [dead], 1
 
 checkNext:
       cmp al, BEAMCOLOR
