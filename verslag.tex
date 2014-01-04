@@ -53,29 +53,55 @@ In dit bestand bevinden zich alle data die belangrijk is voor het lopen van het 
 Het bevat ook de main procedure die wordt opgeroepen wanneer het spel wordt uitegevoerd. Hierin bevindt zich dan ook de main loop. Deze stelt 1 cyclus van het spel voor.
 Zolang er niet op escape wordt gedrukt is dit een oneindige lus. Voor de lus wordt alles geïnitialiseerd. Tijdens de lus worden de 2 belangrijkste procedures opgeroepen: renderWorld en updateWorld. 
 Verder wordt er ook nog gechecked of de speler niet dood is want dan moet er niet meer worden geupdated.
-RenderWorld gaat alle elementen ven het spel tekenen, terwijl updateWorld ervoor zorgt dat alle posities worden bijgewerkt. 
+RenderWorld gaat alle elementen ven het spel tekenen, terwijl updateWorld ervoor zorgt dat alle posities worden bijgewerkt.  %moet nog aangewerkt worden
+
+\subsection{SPRITES.ASM}\label{sprites_asm}
+Hierin worden alleen maar data arrays opgeslagen. Deze arrays zijn eigenlijk alle verschillende tekeningen (bijvoorbeeld het ruimteschip, startscherm, ...) die op het scherm worden getekend. Om de code zo proper mogelijk te houden hebben we deze dus in een ander bestand gestopt.
+
+\subsection{DRAWP.ASM}\label{drawp_asm}
+Dit bestand bevat alle tekenprocedures. 
 
 
 \section{Problemen tijdens het programmeren}\label{problems}
 \begin {itemize}
-\item Obstakels werden gedeeltelijk bovenaan en gedeeltelijk onderaan getekend waardoor de avatar een botsing waarneemde waneer er geen was.
+
+\item \textbf{Hoe obstakels en beams opslaan.}\\
+Vermits het plaatsen van pixels op het scherm niet gebeurt met een x en y co\"{o}rdinaten, maar met een index in de screenBuffer, was de vraag of we de positie van de objecten op het scherm opslaan met dezelfde index of houden we de x- en y-co\"{o}rdinaat bij. We hebben voor het tweede gekozen. Dit maakt het moeilijker en minder performant om de element op het scherm te tekenen, maar maakt het makkelijker om posities te updaten en te generen.
+
+\item \textbf{Te lage obstakels zorgde voor verschillende bugs.}\\
+Zo ging je onverwacht dood en sprongen sommige obstacles over het scherm heen. Dit kwam omdat wanneer we te hoog indexeerde er in het kleurenpalet werd geschreven. Wanneer we dan onze collision detect functie zijn werk lieten doen ging hij telkens de kleur van bijvoorbeeld een beam of het ruimteschip vinden. Dit zorgde dan voor de rare bugs. De oplossing was simpel door de obstakels binnen het bereik van het scherm te plaatsen.
+
+\item \textbf{Hoe bereken je effici\"{e}nt een botsing wanneer objecten een rare vorm hebben.}\\
+Omdat we graag het ruimteschip een wat leukere vorm wouden geven zaten we met dit probleem. De oplossing is om eerst alle opstakels in de screenbuffer weg te schrijven en dan wanneer je de andere objecten tekent te kijken of er op die plek al geen pixel met dezelfde kleur is getekend. Wanneer dit het geval is weet je dat er een botsing is tussen deze twee objecten.
+
+\item \textbf{Obstakels werden niet evenredig verdeeld over de hoogte van het scherm.}\\
+Wanneer je een random getal uit de random generator krijgt in het register ax is dit groter dan de hoogte van het scherm. Om dit optelossen gebruiken we een and om ze enkel de interessante bits bij te houden. Omdat de hoogte van onze obstakels variabel is, dachten we om getal waarmee we and doen ook variabel te maken. Dit bleek een slecht idee vermits niet alle bits van dit getal 1 zijn en de and dus niet evenredig getallen achter liet.\\
+De oplossing is echter simpel. We doen een and met de macht van 2 juist groter dan de hoogte van het scherm (\(2^9 - 1\)). Wanneer dit te groot is, roepen we de random functie nog een maal op tot wanneer dit wel geldt. 
+
+
 \end {itemize}
 
 \section{Screenshots}\label{screens}
 \begin{figure}[htbp]
-\includegraphics[width=60mm]{In_Game.jpg}
+\includegraphics[width=90mm]{In_Game.jpg}
 \caption{Wanneer je aan het spelen bent.}
 \label{fig:ingame}
 \end{figure}
 
 \begin{figure}[htbp]
-\includegraphics[width=60mm]{PressToShoot.jpg}
+\includegraphics[width=90mm]{PressToShoot.jpg}
 \caption{De besturing van het spel}
 \label{fig:besturing}
 \end{figure}
 
 \begin{figure}[htbp]
-\includegraphics[width=60mm]{Menu.jpg}
+\includegraphics[width=90mm]{Up_Down.jpg}
+\caption{De besturing van het spel}
+\label{fig:besturing}
+\end{figure}
+
+\begin{figure}[htbp]
+\includegraphics[width=90mm]{Menu.jpg}
 \caption{Startscherm}
 \label{fig:menu}
 \end{figure}
