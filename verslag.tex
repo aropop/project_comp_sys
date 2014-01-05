@@ -39,28 +39,41 @@ Wanneer je geraakt wordt, zal het scherm rood flitsen.
 
 Het spel heeft maar drie toetsen nodig om gespeeld te worden. Namelijk de drie pijltjes: omhoog, omlaag en rechts.
 Om het schip omhoog te laten gaan, moet de omhoogpijl van het toetsenbord ingedrukt worden.
-Om een kogel af te vuren, moet de rechts-pijl ingedrukt worden.
+Om een kogel af te vuren, moet de rechts-pijl ingedrukt worden.\footnote[1]{Voor visuele uitleg zie Screenshots\ref{screens}}
 Voor je begint wordt je begroet met een start scherm. Je kan het spel dan starten met de enter toets. 
 Je kan het spel op elk moment verlaten met de escape toets. Je komt dan terug op de commando lijn van dosbox.
 
 \section{Code}
-De code is opgedeelt in een aantal bestanden: Game\ref{game_asm}, drawp, sprites, keyb, rand en video. Elk bestand heeft een MASM broncode bestand (.asm) en een include bestand (.inc).
+De code is opgedeelt in een aantal bestanden: Game\ref{game_asm}, sprites\ref{sprites_asm}, drawp\ref{drawp_asm}, keyb\ref{keyb_asm}, rand\ref{rand_asm} en video\ref{video_asm}. Elk bestand heeft een MASM broncode bestand (.asm) en een include bestand (.inc).
 Voor dit project hebben we ons gebasseerd op het gegeven code voorbeeld op pointcarr\'e. Dit wil zeggen dat we de game-loop, keyboard handling en video procedures hebben overgenomen. 
 Dit was een goede basis vermits we niet meer zelf in het "lager" gelegen werk (zoals de interupts) moesten duiken en ons konden focussen op de code die belangrijk was voor het spel zelf.
 
 \subsection{GAME.ASM}\label{game_asm}
-In dit bestand bevinden zich alle data die belangrijk is voor het lopen van het spel zelf. Je vindt er bijvoorbeeld de array met obstakels en de array met beams.
-Het bevat ook de main procedure die wordt opgeroepen wanneer het spel wordt uitegevoerd. Hierin bevindt zich dan ook de main loop. Deze stelt 1 cyclus van het spel voor.
-Zolang er niet op escape wordt gedrukt is dit een oneindige lus. Voor de lus wordt alles geïnitialiseerd. Tijdens de lus worden de 2 belangrijkste procedures opgeroepen: renderWorld en updateWorld. 
-Verder wordt er ook nog gechecked of de speler niet dood is want dan moet er niet meer worden geupdated.
-RenderWorld gaat alle elementen ven het spel tekenen, terwijl updateWorld ervoor zorgt dat alle posities worden bijgewerkt.  %moet nog aangewerkt worden
+In dit bestand bevinden zich alle data die belangrijk zijn voor het lopen van het spel zelf. Het omvat bijvoorbeeld de array met obstakels en de array met beams.
+GAME.ASM bevat ook de main procedure die wordt opgeroepen wanneer het spel wordt uitegevoerd. In deze procedure zit de mainloop die \'e\'en cyclus van het spel voorstelt.
+Zolang er niet op escape wordt gedrukt, zal deze lus oneindig blijven doorgaan. Voordat de lus wordt opgeroepen, wordt alles ge\"initialiseerd. Tijdens de lus worden de 2 belangrijkste procedures opgeroepen: renderWorld en updateWorld. 
+Verder wordt er ook nagekeken of de speler niet dood is want dan zou  niet meer geupdated moeten worden.
+RenderWorld tekent alle elementen van het spel, terwijl updateWorld ervoor zorgt dat alle posities bijgewerkt worden.  %moet nog aangewerkt worden
 
 \subsection{SPRITES.ASM}\label{sprites_asm}
 Hierin worden alleen maar data arrays opgeslagen. Deze arrays zijn eigenlijk alle verschillende tekeningen (bijvoorbeeld het ruimteschip, startscherm, ...) die op het scherm worden getekend. Om de code zo proper mogelijk te houden hebben we deze dus in een ander bestand gestopt.
 
 \subsection{DRAWP.ASM}\label{drawp_asm}
 Dit bestand bevat alle tekenprocedures. 
+De procedures om de avatar, obstakels en score te tekenen worden elke loop van het spel opgeroepen zodat ze steeds up-to-date blijven tijdens het spelen.
+De procedure 'drawNumber' moet elk cijfer afgaan van 0 tot 9 zodat het juiste cijfer op het scherm wordt getekend.
 
+\subsection{KEYB.ASM}\label{keyb_asm}
+KEYB.ASM is e\'e\'n van de bestanden dat de assistenten ons aan het begin van het project hebben meegegeven.
+Het bestand omvat procedures die de input van de gebruiker inleest en doorgeeft aan andere bestanden die deze informatie kunnen gebruiken. Zo wordt 'installKeyboardHandler' gebruikt in 
+GAME.ASM om de 'keyboardHandler' te initialiseren bij het opstarten van het programma. Daarna kan elke loop gekeken worden met de hulp van de variabelen '\_\_keysActive' en '\_\_keyboardState' welke toetsen ingedrukt zijn, zodat de juiste acties zo snel mogelijk kunnen uitgevoerd worden.
+
+\subsection{RAND.ASM}\label{rand_asm}
+Een ander bestand dat we van de assistenten is het RAND.ASM bestand. Het omvat de procedures die nodig zijn om een willekeurig gegenereerd getal terug te geven. Deze procedure is vooral gebruikt voor het maken van obstakels op willekeurige plekken op het scherm.
+
+\subsection{VIDEO.ASM}\label{video_asm}
+Het derde bestand dat we hebben meegekregen is VIDEO.ASM. Dit bestand staat in voor het grafische aspect van het project.
+Het cre\"eert het window waarin het spel gespeeld wordt en het initialiseerd de kleuren die we konden gebruiken tijdens het project.
 
 \section{Problemen tijdens het programmeren}\label{problems}
 \begin {itemize}
@@ -81,7 +94,6 @@ De oplossing is echter simpel. We doen een and met de macht van 2 juist groter d
 
 \end {itemize}
 
-\newpage
 \section{Screenshots}\label{screens}
 \begin{figure}[htbp]
 \includegraphics[width=90mm]{In_Game.jpg}
@@ -92,7 +104,7 @@ De oplossing is echter simpel. We doen een and met de macht van 2 juist groter d
 \begin{figure}[htbp]
 \includegraphics[width=90mm]{PressToShoot.jpg}
 \caption{De besturing van het spel}
-\label{fig:besturing}
+\label{fig:shoot}
 \end{figure}
 
 \begin{figure}[htbp]
