@@ -4,7 +4,7 @@
 \usepackage{graphicx}
 \usepackage{listings}
 \title{Project ComputerSystemen}
-\author{Arno De Witte \\Wout Van Riel  \\Email: \href{mailto:Arno.De.Witte@vub.ac.be}{Arno.De.Witte@vub.ac.be} \\ \href{mailto:Wout.Van.Riel@vub.ac.be}{Wout.Van.Riel@vub.ac.be} \\ %i assume da da u email is
+\author{Arno De Witte (500504) \\Wout Van Riel (500229)  \\Email: \href{mailto:Arno.De.Witte@vub.ac.be}{Arno.De.Witte@vub.ac.be} \\ \href{mailto:Wout.Van.Riel@vub.ac.be}{Wout.Van.Riel@vub.ac.be} \\ 
 Vrije Universiteit Brussel}
 \date{6 januari 2014}
 \begin{document}
@@ -53,7 +53,7 @@ In dit bestand bevinden zich alle data die belangrijk zijn voor het lopen van he
 GAME.ASM bevat ook de main procedure die wordt opgeroepen wanneer het spel wordt uitegevoerd. In deze procedure zit de mainloop die \'e\'en cyclus van het spel voorstelt.
 Zolang er niet op escape wordt gedrukt, zal deze lus oneindig blijven doorgaan. Voordat de lus wordt opgeroepen, wordt alles ge\"initialiseerd. Tijdens de lus worden de 2 belangrijkste procedures opgeroepen: renderWorld en updateWorld. 
 Verder wordt er ook nagekeken of de speler niet dood is want dan zou  niet meer geupdated moeten worden.
-RenderWorld tekent alle elementen van het spel, terwijl updateWorld ervoor zorgt dat alle posities bijgewerkt worden.  %moet nog aangewerkt worden
+RenderWorld tekent alle elementen van het spel, terwijl updateWorld ervoor zorgt dat alle posities bijgewerkt worden. Verder heb je nog handleInput die aan elke toets een actie verbind (goUp, createBeam, ...). Voor elk obstakel (uitgezonderd het ruimteschip) heb je een create en delete procedure. De arrays zijn zo georganiseerd dat alle objecten van voor zitten. Dit zodat we niet altijd over heel de array moeten lopen om te kijken of er nog over zijn.l Er zijn ook enkele hulp procedures die de loop van het spel bepalen.
 
 \subsection{SPRITES.ASM}\label{sprites_asm}
 Hierin worden alleen maar data arrays opgeslagen. Deze arrays zijn eigenlijk alle verschillende tekeningen (bijvoorbeeld het ruimteschip, startscherm, ...) die op het scherm worden getekend. Om de code zo proper mogelijk te houden hebben we deze dus in een ander bestand gestopt.
@@ -64,7 +64,7 @@ De procedures om de avatar, obstakels en score te tekenen worden elke loop van h
 De procedure 'drawNumber' moet elk cijfer afgaan van 0 tot 9 zodat het juiste cijfer op het scherm wordt getekend.
 
 \subsection{KEYB.ASM}\label{keyb_asm}
-KEYB.ASM is e\'e\'n van de bestanden dat de assistenten ons aan het begin van het project hebben meegegeven.
+KEYB.ASM is \'e\'en van de bestanden dat de assistenten ons aan het begin van het project hebben meegegeven.
 Het bestand omvat procedures die de input van de gebruiker inleest en doorgeeft aan andere bestanden die deze informatie kunnen gebruiken. Zo wordt 'installKeyboardHandler' gebruikt in 
 GAME.ASM om de 'keyboardHandler' te initialiseren bij het opstarten van het programma. Daarna kan elke loop gekeken worden met de hulp van de variabelen '\_\_keysActive' en '\_\_keyboardState' welke toetsen ingedrukt zijn, zodat de juiste acties zo snel mogelijk kunnen uitgevoerd worden.
 
